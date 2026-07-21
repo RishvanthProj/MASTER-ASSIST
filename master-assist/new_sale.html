@@ -292,16 +292,30 @@ function addToCart(id){
   });
 }
 
-// ── Barcode Scanner Listener ──
+const SCANNER_TIMEOUT_MS = 400;
 let barcodeBuffer = '';
 let barcodeTimer = null;
+let lastKeyTime = Date.now();
+
 document.addEventListener('keypress', function(e) {
-    // Ignore if typing in an input field (unless it's the global search which we might want to override, but safer to ignore all inputs)
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    const currentTime = Date.now();
+    const timeDiff = currentTime - lastKeyTime;
+    lastKeyTime = currentTime;
+
+    let isInput = (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA');
+
+    if (isInput) {
+        if (timeDiff > 50 && barcodeBuffer.length === 0) {
+            return;
+        } else {
+            e.preventDefault();
+        }
+    }
     
     if (e.key === 'Enter') {
         if (barcodeBuffer.length > 2) {
             handleBarcodeScan(barcodeBuffer);
+            if (isInput) e.preventDefault();
         }
         barcodeBuffer = '';
         clearTimeout(barcodeTimer);
@@ -310,9 +324,8 @@ document.addEventListener('keypress', function(e) {
     
     barcodeBuffer += e.key;
     
-    // Clear buffer if typing is too slow (not a scanner)
     clearTimeout(barcodeTimer);
-    barcodeTimer = setTimeout(() => { barcodeBuffer = ''; }, 100); // Scanners are usually very fast (<50ms per keystroke)
+    barcodeTimer = setTimeout(() => { barcodeBuffer = ''; }, SCANNER_TIMEOUT_MS);
 });
 
 function handleBarcodeScan(code) {
