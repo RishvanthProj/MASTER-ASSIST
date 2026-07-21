@@ -256,15 +256,20 @@ function editItem(id){
 function saveItem(){
   const name=document.getElementById('iName').value.trim();const sku=document.getElementById('iSKU').value.trim();
   if(!name||!sku){alert('Name and SKU are required.');return;}
-  const data={name,sku,barcode:document.getElementById('iBarcode').value.trim(),hsn:document.getElementById('iHSN').value.trim(),unit:document.getElementById('iUnit').value,cat:document.getElementById('iCat').value,brand:document.getElementById('iBrand').value,gst:document.getElementById('iGST').value,taxType:document.getElementById('iTaxType').value,status:document.getElementById('iStatus').value,purchase:parseFloat(document.getElementById('iPurchase').value)||0,sale:parseFloat(document.getElementById('iSale').value)||0,mrp:parseFloat(document.getElementById('iMRP').value)||0,minStock:parseInt(document.getElementById('iMinStock').value)||0,desc:document.getElementById('iDesc').value.trim()};
   const eid=document.getElementById('editId').value;
+  if(items.some(i => i.sku.toLowerCase() === sku.toLowerCase() && i.id !== parseInt(eid))) {
+      alert('SKU already exists. Please use a unique SKU.');
+      return;
+  }
+  const data={name,sku,barcode:document.getElementById('iBarcode').value.trim(),hsn:document.getElementById('iHSN').value.trim(),unit:document.getElementById('iUnit').value,cat:document.getElementById('iCat').value,brand:document.getElementById('iBrand').value,gst:document.getElementById('iGST').value,taxType:document.getElementById('iTaxType').value,status:document.getElementById('iStatus').value,purchase:parseFloat(document.getElementById('iPurchase').value)||0,sale:parseFloat(document.getElementById('iSale').value)||0,mrp:parseFloat(document.getElementById('iMRP').value)||0,minStock:parseInt(document.getElementById('iMinStock').value)||0,desc:document.getElementById('iDesc').value.trim()};
   if(eid){const idx=items.findIndex(i=>i.id===parseInt(eid));items[idx]={...items[idx],...data};}
   else{items.push({id:nextId++,...data});}
+  MA.set('items', items);
   bootstrap.Modal.getInstance(document.getElementById('itemModal')).hide();applyFilters();
 }
 function deleteItem(id){
   const it=items.find(x=>x.id===id);
-  Swal2.fire({title:`Delete ${it.name}?`,icon:'warning',showCancelButton:true,confirmButtonText:'Delete',confirmButtonColor:'#dc3545'}).then(r=>{if(r.isConfirmed){items=items.filter(x=>x.id!==id);applyFilters();Swal2.fire('Deleted!','','success');}});
+  Swal2.fire({title:`Delete ${it.name}?`,icon:'warning',showCancelButton:true,confirmButtonText:'Delete',confirmButtonColor:'#dc3545'}).then(r=>{if(r.isConfirmed){items=items.filter(x=>x.id!==id);MA.set('items', items);applyFilters();Swal2.fire('Deleted!','','success');}});
 }
 function clearFilters(){['searchInput','filterCat','filterBrand','filterStatus'].forEach(id=>document.getElementById(id).value='');applyFilters();}
 
@@ -307,8 +312,7 @@ applyFilters();
   ['iCat','filterCat'].forEach(function(id){var s=document.getElementById(id);if(s&&cats.length){var ph=s.options[0]?s.options[0].outerHTML:'';s.innerHTML=ph+cats.map(function(c){return '<option>'+c.name+'</option>';}).join('');}});
   ['iBrand','filterBrand'].forEach(function(id){var s=document.getElementById(id);if(s&&brands.length){var ph=s.options[0]?s.options[0].outerHTML:'';s.innerHTML=ph+brands.map(function(b){return '<option>'+b.name+'</option>';}).join('');}});
 })();
-if(typeof saveItem==='function'){var _origSaveItm=saveItem;saveItem=function(){_origSaveItm();MA.set('items',items);};}
-if(typeof deleteItem==='function'){var _origDelItm=deleteItem;deleteItem=function(id){_origDelItm(id);MA.set('items',items);};}
+
 
 
 // --- MA badge refresh ---
