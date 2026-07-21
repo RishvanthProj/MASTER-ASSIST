@@ -12,21 +12,28 @@ SERVER_PID=$!
 
 echo "Server started with PID: $SERVER_PID"
 
-# Wait a second for the server to bind
+# Start frontend server on port 8080
+lsof -ti:8080 | xargs kill -9 2>/dev/null
+echo "Starting frontend server..."
+cd ..
+python3 -m http.server 8080 &
+FRONTEND_PID=$!
+
+# Wait a second for the servers to bind
 sleep 2
 
 # Open the frontend in the default browser
 echo "Opening POS application..."
-cd ..
 if which xdg-open > /dev/null; then
-  xdg-open "file://$(pwd)/index.html"
+  xdg-open "http://localhost:8080/index.html"
 elif which gnome-open > /dev/null; then
-  gnome-open "file://$(pwd)/index.html"
+  gnome-open "http://localhost:8080/index.html"
 elif which open > /dev/null; then
-  open "file://$(pwd)/index.html"
+  open "http://localhost:8080/index.html"
 fi
 
 echo "Master Assist is running. Keep this terminal open."
-echo "Press Ctrl+C to stop the server and exit."
+echo "Press Ctrl+C to stop the servers and exit."
 
 wait $SERVER_PID
+wait $FRONTEND_PID

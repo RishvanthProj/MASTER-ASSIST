@@ -50,10 +50,11 @@
     .scanner-active-indicator { background: #e8f5e9; color: #28a745; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
     
     @media print {
+      @page { margin: 0; size: 80mm auto; }
       body * { visibility: hidden; }
       #printReceiptArea, #printReceiptArea * { visibility: visible; }
-      #printReceiptArea { position: absolute; left: 0; top: 0; width: 80mm; font-family: monospace; }
-      .ma-navbar, .ma-sidebar { display: none !important; }
+      #printReceiptArea { position: absolute; left: 0; top: 0; width: 80mm; box-sizing: border-box; font-family: monospace; padding: 5mm; margin: 0; }
+      .ma-navbar, .ma-sidebar, .modal { display: none !important; }
     }
   </style>
 </head>
@@ -502,58 +503,63 @@ function processSale(){
       return totalGst + (itemSubAfterDisc * (c.gst / 100));
   }, 0);
 
-  // Build Receipt HTML
-  let receiptHTML = `
+  // Build Receipt HTML for printing
+  let printHTML = `
+    <div style="font-family:monospace; font-size:12px; color:#000; width:100%; text-align:left;">
+        <div style="text-align:center; margin-bottom:12px; border-bottom:1px dashed #000; padding-bottom:8px;">
+          <div style="font-size:16px;font-weight:700; text-transform:uppercase;">Master Assist</div>
+          <div style="font-size:11px;">Supermarket & Electronics</div>
+          <div style="font-size:10px;">GSTIN: 29AABBCC1234D1Z5</div>
+          <div style="margin-top:6px; font-size:11px; font-weight:600;">TAX INVOICE</div>
+          <div style="display:flex; justify-content:space-between; font-size:10px; margin-top:8px;">
+            <span style="text-align:left;">Bill No: <strong>${saleNo}</strong><br>Date: ${pendingSaleRec.date} ${pendingSaleRec.time}</span>
+            <span style="text-align:right;">Cashier: Admin<br>POS-01</span>
+          </div>
+        </div>
+        <div style="font-size:11px; margin-bottom:6px; font-weight:600; border-bottom:1px solid #000; padding-bottom:3px; display:flex;">
+          <span style="flex:1;">Item</span>
+          <span style="width:30px; text-align:center;">Qty</span>
+          <span style="width:50px; text-align:right;">Amt</span>
+        </div>
+        <div style="margin-bottom:10px;">
+          ${cart.map(c => `
+          <div style="display:flex; font-size:10px; padding:2px 0; align-items:flex-start;">
+            <div style="flex:1;">
+                <div style="font-weight:600;">${c.name}</div>
+                ${c.bargainPrice < c.price ? `<div style="font-size:9px;">MRP: ${c.price} (-${fmtAmt(c.price - c.bargainPrice)})</div>` : `<div style="font-size:9px;">MRP: ${c.price}</div>`}
+            </div>
+            <div style="width:30px; text-align:center;">${c.qty}</div>
+            <div style="width:50px; text-align:right; font-weight:600;">${fmtAmt(c.bargainPrice * c.qty)}</div>
+          </div>`).join('')}
+        </div>
+        <div style="border-top:1px dashed #000; padding-top:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Subtotal</span><span>${fmtAmt(sub)}</span></div>
+          ${document.getElementById('discountInput').value > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Extra Discount</span><span>${document.getElementById('discountInput').value}%</span></div>` : ''}
+          <div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>GST Amount</span><span>${fmtAmt(gstAmountForPrint)}</span></div>
+          <div style="border-top:1px solid #000;margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-size:14px;font-weight:800;"><span>GRAND TOTAL</span><span>${fmtAmt(grand)}</span></div>
+        </div>
+        <div style="margin-top:10px; display:flex; justify-content:space-between; font-size:10px;">
+          <span>Paid via: <strong style="text-transform:capitalize;">${payMode}</strong></span>
+          ${payMode==='cash' ? `<span>Tendered: ${fmtAmt(document.getElementById('cashReceived').value||0)}</span>` : ''}
+        </div>
+        <div style="margin-top:14px;text-align:center;font-size:10px; border-top:1px dashed #000; padding-top:8px;">
+          Thank you for shopping with us!<br>Visit again.
+        </div>
+    </div>`;
+
+  // UI display for the modal (includes the success checkmark)
+  let modalUI = `
     <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:16px;">
         <div style="background:#e8f5e9; color:#28a745; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:10px;"><i class="fas fa-check"></i></div>
         <div style="font-size:18px;font-weight:700;color:#252525;">Ready to Print</div>
         <div style="font-size:12px;color:#888;">Print receipt to complete sale.</div>
     </div>
-    
-    <div style="border:1px solid #e0e0ea; border-radius:8px; padding:16px; background:#fff; font-family:monospace;">
-        <div style="text-align:center;margin-bottom:16px; border-bottom:1px dashed #ccc; padding-bottom:10px;">
-          <div style="font-size:18px;font-weight:700; text-transform:uppercase;">Master Assist</div>
-          <div style="font-size:12px;color:#555;">Supermarket & Electronics</div>
-          <div style="font-size:11px;color:#888;">GSTIN: 29AABBCC1234D1Z5</div>
-          <div style="margin-top:8px; font-size:12px; font-weight:600;">TAX INVOICE</div>
-          <div style="display:flex; justify-content:space-between; font-size:11px; margin-top:10px;">
-            <span style="text-align:left;">Bill No: <strong>${saleNo}</strong><br>Date: ${saleRec.date} ${saleRec.time}</span>
-            <span style="text-align:right;">Cashier: Admin<br>POS-01</span>
-          </div>
-        </div>
-        <div style="font-size:12px; margin-bottom:8px; font-weight:600; border-bottom:1px solid #eee; padding-bottom:4px; display:flex;">
-          <span style="flex:1;">Item</span>
-          <span style="width:40px; text-align:center;">Qty</span>
-          <span style="width:60px; text-align:right;">Amount</span>
-        </div>
-        <div style="margin-bottom:12px;">
-          ${cart.map(c => `
-          <div style="display:flex; font-size:11px; padding:3px 0; align-items:flex-start;">
-            <div style="flex:1;">
-                <div style="font-weight:600;">${c.name}</div>
-                ${c.bargainPrice < c.price ? `<div style="font-size:9.5px; color:#888;">MRP: ${c.price} <span style="color:#28a745;">(-${fmtAmt(c.price - c.bargainPrice)})</span></div>` : `<div style="font-size:9.5px; color:#888;">MRP: ${c.price}</div>`}
-            </div>
-            <div style="width:40px; text-align:center;">${c.qty}</div>
-            <div style="width:60px; text-align:right; font-weight:600;">${fmtAmt(c.bargainPrice * c.qty)}</div>
-          </div>`).join('')}
-        </div>
-        <div style="border-top:1px dashed #ccc; padding-top:8px;">
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#333; padding:2px 0;"><span>Subtotal</span><span>${fmtAmt(sub)}</span></div>
-          ${document.getElementById('discountInput').value > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#333; padding:2px 0;"><span>Extra Discount</span><span>${document.getElementById('discountInput').value}%</span></div>` : ''}
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#333; padding:2px 0;"><span>GST Amount</span><span>${fmtAmt(gstAmountForPrint)}</span></div>
-          <div style="border-top:1px solid #333;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-size:16px;font-weight:800;"><span>GRAND TOTAL</span><span>${fmtAmt(grand)}</span></div>
-        </div>
-        <div style="margin-top:12px; display:flex; justify-content:space-between; font-size:11px; color:#555;">
-          <span>Paid via: <strong style="text-transform:capitalize; color:#333;">${payMode}</strong></span>
-          ${payMode==='cash' ? `<span>Tendered: ${fmtAmt(document.getElementById('cashReceived').value||0)}</span>` : ''}
-        </div>
-        <div style="margin-top:16px;text-align:center;font-size:11px;color:#555; border-top:1px dashed #ccc; padding-top:10px;">
-          Thank you for shopping with us!<br>Visit again.
-        </div>
+    <div style="border:1px solid #e0e0ea; border-radius:8px; padding:16px; background:#fff; overflow:hidden;">
+        ${printHTML}
     </div>`;
   
-  document.getElementById('receiptBody').innerHTML = receiptHTML;
-  document.getElementById('printReceiptArea').innerHTML = receiptHTML.replace('color:#28a745;', 'color:#000;').replace('color:#696cff;', 'color:#000;'); // Prepare print version
+  document.getElementById('receiptBody').innerHTML = modalUI;
+  document.getElementById('printReceiptArea').innerHTML = printHTML;
   
   new bootstrap.Modal(document.getElementById('receiptModal')).show();
 }
