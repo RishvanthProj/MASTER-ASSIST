@@ -11,6 +11,9 @@ app.use(bodyParser.json());
 
 const DB_FILE = path.join(__dirname, 'database.xlsx');
 
+// Serve frontend static files from the parent directory
+app.use(express.static(path.join(__dirname, '..')));
+
 // Simple global async mutex to serialize all reads and writes
 let globalLock = Promise.resolve();
 
@@ -366,6 +369,29 @@ app.post('/api/sales/import', (req, res) => {
 });
 
 const PORT = 4000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Master Assist Local Server running at http://localhost:${PORT}`);
-});
+
+async function startServer() {
+    try {
+        // Test access to the database to ensure it's not locked by Excel
+        const wb = new ExcelJS.Workbook();
+        await wb.xlsx.readFile(DB_FILE);
+        
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Master Assist Local Server running at http://localhost:${PORT}`);
+        });
+    } catch (err) {
+        console.error('\n======================================================');
+        console.error('CRITICAL ERROR: COULD NOT START LOCAL DATABASE SERVER');
+        console.error('======================================================');
+        if (err.message && err.message.includes('EBUSY')) {
+            console.error('REASON: database.xlsx is currently open in Excel (or locked by another process).');
+            console.error('FIX: Please close Excel completely and then restart the app.');
+        } else {
+            console.error('REASON:', err.message);
+        }
+        console.error('======================================================\n');
+        process.exit(1);
+    }
+}
+
+startServer();

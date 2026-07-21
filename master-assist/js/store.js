@@ -44,7 +44,28 @@ const MA = (function () {
     });
   }
 
-  const API_BASE = 'http://localhost:4000/api';
+  const API_BASE = '/api';
+
+  function showFatalError() {
+      if (document.getElementById('ma-fatal-error')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'ma-fatal-error';
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);color:white;z-index:99999;display:flex;align-items:center;justify-content:center;text-align:center;font-family:sans-serif;backdrop-filter:blur(5px);';
+      overlay.innerHTML = `
+        <div style="background:#fff;color:#333;padding:40px;border-radius:12px;max-width:500px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <div style="font-size:48px;color:#dc3545;margin-bottom:16px;">⚠️</div>
+            <h2 style="margin:0 0 16px;font-size:24px;font-weight:700;">Local DB Not Reachable</h2>
+            <p style="margin:0 0 24px;font-size:16px;color:#555;">The Master Assist local server has stopped running or crashed.</p>
+            <div style="background:#f8f9fa;padding:16px;border-radius:8px;border:1px solid #dee2e6;text-align:left;">
+                <strong>How to fix:</strong><br>
+                1. Close this browser window.<br>
+                2. Run <code>start.sh</code> (Mac) or <code>start.bat</code> (Windows).<br>
+                3. The app will reopen automatically.
+            </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+  }
 
   function syncRequest(method, endpoint, body) {
     var xhr = new XMLHttpRequest();
@@ -57,12 +78,18 @@ const MA = (function () {
       } else {
         var err;
         try { err = JSON.parse(xhr.responseText); } catch(e) { err = { error: xhr.statusText }; }
-        alert("Local DB Error: " + (err.error || xhr.statusText));
+        if (xhr.status === 0) {
+            showFatalError();
+        } else {
+            console.error("Local DB Error: " + (err.error || xhr.statusText));
+            // Let the UI handle other API errors (like stock out) gracefully without alert
+        }
         throw new Error(err.error);
       }
     } catch(e) {
-      if (!xhr.status) {
-        alert("Local DB not reachable! Please ensure the local server is running on port 4000.");
+      console.error("Fetch Error:", e);
+      if (xhr.status === 0 || !xhr.status) {
+          showFatalError();
       }
       throw e;
     }
