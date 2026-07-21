@@ -315,7 +315,7 @@ document.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         if (barcodeBuffer.length > 2) {
             handleBarcodeScan(barcodeBuffer);
-            if (isInput) e.preventDefault();
+            e.preventDefault(); // Always prevent default if it resulted in a scan, to avoid clicking focused buttons
         }
         barcodeBuffer = '';
         clearTimeout(barcodeTimer);
