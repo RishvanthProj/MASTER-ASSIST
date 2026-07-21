@@ -182,7 +182,7 @@ function renderLabels(){
 
   selItems.forEach(i=>{
       let priceText = i.sale ? `Sale: ₹${i.sale} (MRP: ₹${i.mrp})` : `MRP: ₹${i.mrp}`;
-      for(let c=0;c<Math.min(copies, 100);c++){
+      for(let c=0;c<copies;c++){
           let bcId = 'bc-' + (++bcIdCounter);
           barcodeData.push({id: bcId, value: i.barcode});
           html+=`<div class="barcode-label">
@@ -196,23 +196,34 @@ function renderLabels(){
   
   document.getElementById('labelGrid').innerHTML=html;
   
-  // Render real barcodes using JsBarcode
+  // Render real barcodes using JsBarcode in chunks to prevent freezing
   setTimeout(() => {
-      barcodeData.forEach(bd => {
-          try {
-              JsBarcode("#" + bd.id, bd.value, {
-                  format: "CODE128",
-                  lineColor: "#222",
-                  width: 1.5,
-                  height: 40,
-                  displayValue: true,
-                  fontSize: 12,
-                  margin: 2
-              });
-          } catch(e) {
-              console.error("Barcode error for " + bd.value, e);
+      let idx = 0;
+      function renderChunk() {
+          let chunkEnd = Math.min(idx + 25, barcodeData.length);
+          for (; idx < chunkEnd; idx++) {
+              let bd = barcodeData[idx];
+              try {
+                  JsBarcode("#" + bd.id, bd.value, {
+                      format: "CODE128",
+                      lineColor: "#222",
+                      width: 1.5,
+                      height: 40,
+                      displayValue: true,
+                      fontSize: 12,
+                      margin: 2
+                  });
+              } catch(e) {
+                  console.error("Barcode error for " + bd.value, e);
+                  let svg = document.getElementById(bd.id);
+                  if (svg) svg.outerHTML = '<div style="color:red;font-size:10px;padding:10px;">Invalid Barcode</div>';
+              }
           }
-      });
+          if (idx < barcodeData.length) {
+              requestAnimationFrame(renderChunk);
+          }
+      }
+      if(barcodeData.length) requestAnimationFrame(renderChunk);
   }, 50);
 }
 
