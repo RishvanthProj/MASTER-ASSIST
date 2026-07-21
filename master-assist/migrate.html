@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Migrate Data to Excel</title>
+</head>
+<body>
+    <h1>Data Migration</h1>
+    <button onclick="migrate()">Migrate Items & Sales to Local Server</button>
+    <div id="log"></div>
+    <script>
+        function log(msg) {
+            document.getElementById('log').innerHTML += `<p>${msg}</p>`;
+        }
+        
+        async function migrate() {
+            try {
+                const items = JSON.parse(localStorage.getItem('ma_items') || '[]');
+                const sales = JSON.parse(localStorage.getItem('ma_sales') || '[]');
+                
+                log(`Found ${items.length} items and ${sales.length} sales in localStorage.`);
+                
+                for (let item of items) {
+                    await fetch('http://localhost:4000/api/items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(item)
+                    });
+                }
+                log(`Items migrated.`);
+                
+                for (let sale of sales) {
+                    // For sales, we can't use completeSale because it will deduct stock again!
+                    // We need a raw POST endpoint or just let the user know sales migration is tricky if it deducts stock.
+                    // Actually, the prompt says "Migrate the current localStorage data... into the initial database.xlsx".
+                    // I will add a raw import endpoint for sales in the server.
+                    await fetch('http://localhost:4000/api/sales/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(sale)
+                    });
+                }
+                log(`Sales migrated. Done!`);
+            } catch (e) {
+                log('Error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

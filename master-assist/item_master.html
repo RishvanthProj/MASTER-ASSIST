@@ -262,14 +262,30 @@ function saveItem(){
       return;
   }
   const data={name,sku,barcode:document.getElementById('iBarcode').value.trim(),hsn:document.getElementById('iHSN').value.trim(),unit:document.getElementById('iUnit').value,cat:document.getElementById('iCat').value,brand:document.getElementById('iBrand').value,gst:document.getElementById('iGST').value,taxType:document.getElementById('iTaxType').value,status:document.getElementById('iStatus').value,purchase:parseFloat(document.getElementById('iPurchase').value)||0,sale:parseFloat(document.getElementById('iSale').value)||0,mrp:parseFloat(document.getElementById('iMRP').value)||0,minStock:parseInt(document.getElementById('iMinStock').value)||0,desc:document.getElementById('iDesc').value.trim()};
-  if(eid){const idx=items.findIndex(i=>i.id===parseInt(eid));items[idx]={...items[idx],...data};}
-  else{items.push({id:nextId++,...data});}
-  MA.set('items', items);
-  bootstrap.Modal.getInstance(document.getElementById('itemModal')).hide();applyFilters();
+  
+  if(eid){ data.id = parseInt(eid); }
+  
+  try {
+      MA.upsert('items', data);
+      items = MA.getAll('items'); // Reload from server
+      bootstrap.Modal.getInstance(document.getElementById('itemModal')).hide();
+      applyFilters();
+  } catch (e) {
+      // Error is handled by syncRequest alert, but we can do further UI changes if needed
+  }
 }
 function deleteItem(id){
   const it=items.find(x=>x.id===id);
-  Swal2.fire({title:`Delete ${it.name}?`,icon:'warning',showCancelButton:true,confirmButtonText:'Delete',confirmButtonColor:'#dc3545'}).then(r=>{if(r.isConfirmed){items=items.filter(x=>x.id!==id);MA.set('items', items);applyFilters();Swal2.fire('Deleted!','','success');}});
+  Swal2.fire({title:`Delete ${it.name}?`,icon:'warning',showCancelButton:true,confirmButtonText:'Delete',confirmButtonColor:'#dc3545'}).then(r=>{
+      if(r.isConfirmed){
+          try {
+              MA.remove('items', id);
+              items = MA.getAll('items'); // Reload from server
+              applyFilters();
+              Swal2.fire('Deleted!','','success');
+          } catch (e) {}
+      }
+  });
 }
 function clearFilters(){['searchInput','filterCat','filterBrand','filterStatus'].forEach(id=>document.getElementById(id).value='');applyFilters();}
 

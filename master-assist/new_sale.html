@@ -588,22 +588,19 @@ window.addEventListener('afterprint', () => {
             cancelButtonText: 'No, Abort'
         }).then(r => {
             if(r.isConfirmed) {
-                // Save sale
-                MA.upsert('sales', pendingSaleRec);
-                MA.addAudit('Sale completed: ' + pendingSaleRec.billNo + ' — ' + MA.fmt(pendingSaleRec.total));
-                // Deduct inventory
-                let dbItems = MA.getAll('items');
-                for(let c of pendingSaleRec.items) {
-                    let idx = dbItems.findIndex(i => i.id === c.id);
-                    if(idx !== -1) {
-                        dbItems[idx].stock = (dbItems[idx].stock || 0) - c.qty;
-                    }
+                try {
+                    // Save sale (Server handles stock deduction atomically)
+                    MA.upsert('sales', pendingSaleRec);
+                    MA.addAudit('Sale completed: ' + pendingSaleRec.billNo + ' — ' + MA.fmt(pendingSaleRec.total));
+                    
+                    Swal2.fire({title:'Sale Completed', text:'Inventory updated.', icon:'success', timer:2000, showConfirmButton:false});
+                    bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
+                    newSale();
+                    pendingSaleRec = null;
+                } catch (e) {
+                    // syncRequest alerts the user, but we can also log it
+                    console.error('Sale rejected by server:', e);
                 }
-                MA.set('items', dbItems);
-                Swal2.fire({title:'Sale Completed', text:'Inventory updated.', icon:'success', timer:2000, showConfirmButton:false});
-                bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
-                newSale();
-                pendingSaleRec = null;
             } else {
                 Swal2.fire('Sale Aborted', 'Inventory not deducted.', 'info');
                 pendingSaleRec = null;
