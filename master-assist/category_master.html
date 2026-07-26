@@ -17,7 +17,8 @@
   <div class="ma-navbar-right ms-auto">
     <button class="navbar-icon-btn" onclick="window.location.href='notifications.html'"><i class="fas fa-bell"></i><span class="navbar-badge"><span id="navBadge">0</span></span></button>
     <div style="position:relative;"><button class="navbar-user" id="userDropdownToggle"><div class="navbar-avatar">A</div><span class="d-none d-md-inline">Admin</span><i class="fas fa-chevron-down" style="font-size:10px;opacity:0.7;"></i></button>
-    <div class="user-dropdown" id="userDropdown"><div class="user-dropdown-header"><div class="user-dropdown-name">Administrator</div><div class="user-dropdown-role">Master Assist — Super Admin</div></div><a href="profile.html"><i class="fas fa-user"></i> My Profile</a><a href="settings.html"><i class="fas fa-cog"></i> Settings</a><div class="user-dropdown-divider"></div><button onclick="window.location.href='index.html'"><i class="fas fa-sign-out-alt"></i> Logout</button></div></div>
+    <div class="user-dropdown" id="userDropdown"><div class="user-dropdown-header"><div class="user-dropdown-name">Administrator</div><div class="user-dropdown-role">Master Assist — Super Admin</div></div><a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="#" onclick="toggleRole()"><i class="fas fa-exchange-alt"></i> Switch Role</a><a href="settings.html"><i class="fas fa-cog"></i> Settings</a><div class="user-dropdown-divider"></div><button onclick="window.location.href='index.html'"><i class="fas fa-sign-out-alt"></i> Logout</button></div></div>
   </div>
 </nav>
 <aside class="ma-sidebar" id="sidebar">
@@ -67,13 +68,13 @@
   </ul>
   <div class="sidebar-section-title">Communication</div>
   <ul class="sidebar-menu"><li><a href="sms_email.html"><span class="menu-icon"><i class="fas fa-envelope"></i></span>SMS &amp; Email</a></li></ul>
-  <div class="sidebar-section-title">Administration</div>
+  <div class="sidebar-section-title" data-admin-only>Administration</div>
   <ul class="sidebar-menu">
     <li><a href="users.html"><span class="menu-icon"><i class="fas fa-users"></i></span>User Management</a></li>
     <li><a href="area_master.html"><span class="menu-icon"><i class="fas fa-map-marker-alt"></i></span>Area Master</a></li>
     <li><a href="centers.html"><span class="menu-icon"><i class="fas fa-building"></i></span>Centers</a></li>
     <li><a href="notifications.html"><span class="menu-icon"><i class="fas fa-bell"></i></span>Notifications</a></li>
-    <li><a href="settings.html"><span class="menu-icon"><i class="fas fa-cog"></i></span>Settings</a></li>
+    <li data-admin-only><a href="settings.html"><span class="menu-icon"><i class="fas fa-cog"></i></span>Settings</a></li>
     <li><a href="settings.html"><span class="menu-icon"><i class="fas fa-history"></i></span>Audit Log</a></li>
   </ul>
   <div class="sidebar-divider"></div>

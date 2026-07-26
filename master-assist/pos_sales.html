@@ -32,7 +32,15 @@
     .txn-sale   { background:#e8f8f0; color:#28a745; }
     .txn-return { background:#fdecea; color:#dc3545; }
     .txn-void   { background:#f0f0f5; color:#888; }
-  </style>
+  
+    @media print {
+      @page { margin: 0; size: 80mm auto; }
+      body { margin: 0; padding: 0; }
+      body > :not(#printReceiptArea) { display: none !important; }
+      #printReceiptArea { display: block !important; position: static !important; width: 80mm; box-sizing: border-box; font-family: monospace; padding: 5mm; margin: 0; }
+      #printReceiptArea * { visibility: visible; }
+    }
+</style>
 </head>
 <body>
 
@@ -64,6 +72,7 @@
           <div class="user-dropdown-role">Master Assist — Super Admin</div>
         </div>
         <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="#" onclick="toggleRole()"><i class="fas fa-exchange-alt"></i> Switch Role</a>
         <div class="user-dropdown-divider"></div>
         <button onclick="window.location.href='index.html'"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </div>
@@ -119,13 +128,13 @@
   </ul>
   <div class="sidebar-section-title">Communication</div>
   <ul class="sidebar-menu"><li><a href="sms_email.html"><span class="menu-icon"><i class="fas fa-envelope"></i></span>SMS &amp; Email</a></li></ul>
-  <div class="sidebar-section-title">Administration</div>
+  <div class="sidebar-section-title" data-admin-only>Administration</div>
   <ul class="sidebar-menu">
     <li><a href="users.html"><span class="menu-icon"><i class="fas fa-users"></i></span>User Management</a></li>
     <li><a href="area_master.html"><span class="menu-icon"><i class="fas fa-map-marker-alt"></i></span>Area Master</a></li>
     <li><a href="centers.html"><span class="menu-icon"><i class="fas fa-building"></i></span>Centers</a></li>
     <li><a href="notifications.html"><span class="menu-icon"><i class="fas fa-bell"></i></span>Notifications</a></li>
-    <li><a href="settings.html"><span class="menu-icon"><i class="fas fa-cog"></i></span>Settings</a></li>
+    <li data-admin-only><a href="settings.html"><span class="menu-icon"><i class="fas fa-cog"></i></span>Settings</a></li>
     <li><a href="settings.html"><span class="menu-icon"><i class="fas fa-history"></i></span>Audit Log</a></li>
   </ul>
   <div class="sidebar-divider"></div>
@@ -133,6 +142,20 @@
 </aside>
 
 <!-- MAIN -->
+<!-- Hidden Print Area -->
+<div id="printReceiptArea" style="display:none; padding:10px; background:#fff;"></div>
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background:#f4f5f9;">
+      <div class="modal-header" style="border-bottom:none;"><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="receiptBody" style="padding-top:0;"></div>
+      <div class="modal-footer" style="border-top:none; justify-content:center; padding-bottom:20px;">
+        <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+      </div>
+    </div>
+  </div>
+</div>
 <main class="ma-main" id="maMain">
 
   <div class="page-header">
@@ -218,7 +241,7 @@
           <table class="ma-table">
             <thead><tr>
               <th>#</th><th>Txn ID</th><th>POS</th><th>Cashier</th>
-              <th>Items</th><th>Amount</th><th>Type</th><th>Time</th>
+              <th>Items</th><th>Amount</th><th>Type</th><th>Time</th><th>Actions</th>
             </tr></thead>
             <tbody id="txnBody"></tbody>
           </table>
@@ -235,6 +258,7 @@
 
 <script src="js/store.js"></script>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   var posData = MA.getAll('posTerminals');
@@ -321,6 +345,10 @@
         '<td style="font-weight:600;">'+fmtAmt(t.amount)+'</td>'+
         '<td><span class="txn-type-badge '+typeCls+'">'+t.type.charAt(0).toUpperCase()+t.type.slice(1)+'</span></td>'+
         '<td style="color:#888;font-size:12px;">'+t.time+'</td>'+
+        '<td style="white-space:nowrap;">' +
+        (t.type==='sale' ? '<button class="btn btn-sm btn-outline-secondary" onclick="printPastReceipt('+t.id+')" title="Print Receipt"><i class="fas fa-print"></i></button> ' +
+        '<button class="btn btn-sm btn-outline-danger" onclick="voidTransaction('+t.id+')" title="Void Transaction"><i class="fas fa-ban"></i></button>' : '') +
+        '</td>'+
       '</tr>';
     });}
     document.getElementById('txnBody').innerHTML=html;

@@ -9,54 +9,51 @@
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/master-assist.css" />
   <style>
-    .pos-layout { display:grid; grid-template-columns:1fr 420px; gap:16px; height:calc(100vh - 120px); }
-    .pos-left { display:flex; flex-direction:column; gap:12px; overflow:hidden; }
-    .pos-right { display:flex; flex-direction:column; gap:0; background:#fff; border:1px solid #e8e8f0; border-radius:10px; overflow:hidden; }
-    .item-search-bar { display:flex; gap:8px; align-items:center; }
-    .product-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; overflow-y:auto; flex:1; padding-right:4px; align-content: start; }
-    .prod-card { background:#fff; border:1px solid #e8e8f0; border-radius:10px; padding:16px 12px; cursor:pointer; transition:all .15s; text-align:center; display:flex; flex-direction:column; align-items:center; }
-    .prod-card:hover { border-color:#696cff; box-shadow:0 4px 12px rgba(105,108,255,.12); transform:translateY(-2px); }
-    .prod-card-icon { width:44px; height:44px; border-radius:8px; background:#ededff; color:#696cff; display:flex; align-items:center; justify-content:center; font-size:18px; margin:0 auto 8px; }
-    .prod-card-name { font-size:12px; font-weight:600; color:#252525; margin-bottom:2px; line-height:1.3; }
-    .prod-card-price { font-size:13px; font-weight:700; color:#696cff; }
-    .prod-card-stock { font-size:10px; color:#aaa; }
-    .cart-header { padding:14px 16px; border-bottom:1px solid #f0f0f5; font-size:14px; font-weight:700; color:#252525; display:flex; align-items:center; justify-content:space-between; }
-    .cart-customer { padding:10px 16px; border-bottom:1px solid #f0f0f5; }
-    .cart-items { flex:1; overflow-y:auto; padding:8px 0; }
-    .cart-row { display:flex; align-items:center; gap:8px; padding:8px 16px; border-bottom:1px solid #f8f8fc; }
-    .cart-row:last-child { border-bottom:0; }
-    .cart-item-name { font-size:12px; font-weight:600; color:#333; flex:1; }
-    
-    /* Bargain price input style */
-    .cart-item-price-input { width:65px; padding:2px 4px; font-size:12px; font-weight:600; border:1px solid #e0e0ea; border-radius:4px; text-align:right; color:#696cff; }
-    .cart-item-price-input:focus { outline:none; border-color:#696cff; }
-    
-    .qty-ctrl { display:flex; align-items:center; gap:4px; }
-    .qty-btn { width:24px; height:24px; border-radius:4px; border:1px solid #e0e0ea; background:#f8f8fc; cursor:pointer; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; color:#696cff; }
-    .qty-val { width:28px; text-align:center; font-size:12px; font-weight:600; }
-    .cart-row-total { font-size:12px; font-weight:700; color:#252525; width:65px; text-align:right; }
-    .cart-summary { border-top:2px solid #f0f0f5; padding:12px 16px; }
-    .summary-line { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:3px 0; color:#555; }
-    .summary-total { display:flex; justify-content:space-between; font-size:16px; font-weight:700; color:#252525; padding:8px 0 0; border-top:1px solid #f0f0f5; margin-top:4px; }
-    .cart-actions { padding:12px 16px; display:flex; flex-direction:column; gap:8px; border-top:1px solid #f0f0f5; }
-    .pay-mode-row { display:flex; gap:6px; }
-    .pay-mode-btn { flex:1; padding:7px 4px; border-radius:6px; border:2px solid #e0e0ea; background:#fff; font-size:11px; font-weight:600; color:#555; cursor:pointer; text-align:center; transition:all .15s; }
-    .pay-mode-btn.active { border-color:#696cff; background:#ededff; color:#696cff; }
-    .pos-cats { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
-    .cat-filter-btn { background:#f0f0f5; border:0; padding:5px 12px; border-radius:99px; font-size:12px; font-weight:500; color:#555; cursor:pointer; transition:all .15s; }
-    .cat-filter-btn.active { background:#696cff; color:#fff; }
-    .empty-cart { text-align:center; padding:40px 20px; color:#bbb; }
-    .empty-cart i { font-size:36px; display:block; margin-bottom:10px; }
+    .erp-top-panel { background:#fff; border:1px solid #c9cdd4; padding:8px 12px; display:flex; flex-wrap:wrap; gap:12px; font-size:11px; margin-bottom:8px; }
+    .erp-top-panel label { font-weight:700; color:#444; margin-bottom:2px; display:block; }
+    .erp-top-panel select, .erp-top-panel input { width:100%; border:1px solid #c9cdd4; padding:3px 6px; font-size:11px; border-radius:2px; }
+    .erp-form-group { flex:1; min-width:120px; }
+    .erp-search-bar { background:#3b5998; padding:6px 12px; display:flex; gap:8px; align-items:center; color:#fff; }
+    .erp-search-bar input { flex:1; padding:4px 8px; font-size:12px; border:none; border-radius:2px; }
+    .erp-search-bar input:focus { outline:none; box-shadow: 0 0 0 2px rgba(255,255,255,0.5); }
+    .erp-table-wrapper { height:calc(100vh - 400px); overflow-y:auto; background:#fff; border:1px solid #c9cdd4; }
+    .erp-table { width:100%; border-collapse:collapse; font-size:11px; }
+    .erp-table th { background:#3b5998; border:1px solid #c9cdd4; padding:6px; font-weight:700; color:#fff; position:sticky; top:0; }
+    .erp-table td { border:1px solid #c9cdd4; padding:4px 6px; }
+    .erp-table input { width:100%; border:1px solid #e0e0ea; padding:2px 4px; font-size:11px; text-align:right; }
+    .erp-table input:focus { border-color:#3b5998; outline:none; }
+    .erp-footer { display:flex; gap:12px; margin-top:8px; }
+    .erp-footer-box { flex:1; background:#fff; border:1px solid #c9cdd4; font-size:11px; }
+    .erp-footer-box-header { background:#3b5998; color:#fff; padding:4px 8px; font-weight:700; }
+    .erp-footer-box-body { padding:8px; }
+    .erp-tender { width: 300px; min-width: 250px; }
+    .erp-net-sale { border: 2px solid #dc3545; text-align:center; padding:10px; margin-top:8px; font-size:18px; font-weight:800; color:#dc3545; }
     .scanner-active-indicator { background: #e8f5e9; color: #28a745; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
     
     @media print {
       @page { margin: 0; size: 80mm auto; }
-      body * { visibility: hidden; }
-      #printReceiptArea, #printReceiptArea * { visibility: visible; }
-      #printReceiptArea { position: absolute; left: 0; top: 0; width: 80mm; box-sizing: border-box; font-family: monospace; padding: 5mm; margin: 0; }
-      .ma-navbar, .ma-sidebar, .modal { display: none !important; }
+      body { margin: 0; padding: 0; }
+      body > :not(#printReceiptArea) { display: none !important; }
+      #printReceiptArea { display: block !important; position: static !important; width: 80mm; box-sizing: border-box; font-family: monospace; padding: 5mm; margin: 0; }
+      #printReceiptArea * { visibility: visible; }
     }
-  </style>
+  
+    .erp-sidebar-panel { padding: 8px; }
+    .erp-totals-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #ccc; font-size: 11px; font-weight: 700; color: #333; }
+    .erp-totals-table td { border: 1px solid #ccc; padding: 4px 6px; vertical-align: middle; }
+    .erp-totals-table td input { width: 100%; border: 1px solid #ccc; background: #eaeaea; padding: 2px 4px; border-radius: 2px; font-family: monospace; font-size: 12px; font-weight: 600; text-align: left; box-sizing: border-box; }
+    .erp-totals-table td input.editable { background: #fff; }
+    .erp-totals-table td.label-col { background: #fff; width: 45%; }
+    .erp-totals-table td.val-col { background: #fff; width: 55%; }
+    .net-sale-row { text-align: center; font-size: 15px; font-weight: 800; color: red; }
+    
+    .tender-box { border: 1px solid #ccc; background: #fff; margin-top: 8px; }
+    .tender-box-header { background: #fff; color: #155799; font-size: 14px; font-weight: 800; padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #155799; }
+    .tender-body { padding: 8px; font-size: 12px; font-weight: 700; color: #000; }
+    .tender-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end; }
+    .tender-input { width: 100%; padding: 4px; border: 1px solid #ccc; background: #eaeaea; border-radius: 2px; box-sizing: border-box; }
+    .tender-input.editable { background: #fff; }
+</style>
 </head>
 <body>
 <nav class="ma-navbar">
@@ -74,6 +71,7 @@
       <div class="user-dropdown" id="userDropdown">
         <div class="user-dropdown-header"><div class="user-dropdown-name">Administrator</div><div class="user-dropdown-role">Master Assist — Super Admin</div></div>
         <a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="#" onclick="toggleRole()"><i class="fas fa-exchange-alt"></i> Switch Role</a>
         <a href="settings.html"><i class="fas fa-cog"></i> Settings</a>
         <div class="user-dropdown-divider"></div>
         <button onclick="window.location.href='index.html'"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -124,90 +122,277 @@
   <ul class="sidebar-menu"><li><button onclick="window.location.href='index.html'"><span class="menu-icon"><i class="fas fa-sign-out-alt"></i></span>Logout</button></li></ul>
 </aside>
 
-<main class="ma-main" id="maMain" style="padding:16px;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <div>
-      <div class="page-title" style="font-size:18px;">Bill Generator</div>
-      <div style="font-size:11px;color:#888;">Bill No: <strong id="billNo">—</strong> &nbsp;|&nbsp; POS: <strong>POS-01</strong> &nbsp;|&nbsp; Cashier: <strong>Admin</strong></div>
+<div style="display:flex; flex-direction:column; height: calc(100vh - 50px);">
+<main class="ma-main" id="maMain" style="display:flex; flex-direction:row; padding:0; gap:0; flex:1; overflow:hidden;">
+  <div style="flex:1; display:flex; flex-direction:column; padding:12px; overflow-y:auto; background:#f4f5f9; min-width:0;">
+  <!-- Header Bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;background:#3b5998;color:#fff;padding:4px 12px;border-radius:3px;">
+    <div style="font-size:14px;font-weight:700;"><i class="fas fa-cog me-2"></i>New Sale</div>
+    <div style="font-size:11px;">Bill No: <strong id="billNo">—</strong> &nbsp;|&nbsp; POS-01</div>
+  </div>
+
+  <!-- Top Form Panel -->
+  <div class="erp-top-panel">
+    <div class="erp-form-group">
+      <label>Sale Type</label>
+      <select><option>GST</option><option>Non-GST</option></select>
     </div>
-    <div class="d-flex gap-2">
-      <button class="btn-ma-outline btn-ma-sm" onclick="exportSales()"><i class="fas fa-file-excel me-1"></i>Export All Sales</button>
-      <button class="btn-ma-outline btn-ma-sm" onclick="clearCart()"><i class="fas fa-trash me-1"></i>Clear</button>
-      <a href="pos_sales.html" class="btn-ma-outline btn-ma-sm"><i class="fas fa-list me-1"></i>Sales List</a>
+    <div class="erp-form-group">
+      <label>Bill Type</label>
+      <select><option>Invoice</option><option>Estimate</option></select>
+    </div>
+    <div class="erp-form-group">
+      <label>Tax Type</label>
+      <select><option>Inclusive</option><option>Exclusive</option></select>
+    </div>
+    <div class="erp-form-group">
+      <label>Sale To</label>
+      <select><option>B2C</option><option>B2B</option></select>
+    </div>
+    <div class="erp-form-group">
+      <label>Billing Date</label>
+      <input type="text" id="billDate" readonly />
+    </div>
+  </div>
+  
+  <div class="erp-top-panel" style="margin-top:-9px; border-top:none;">
+    <div class="erp-form-group">
+      <label>Customer Name <i class="fas fa-plus" style="cursor:pointer;color:#3b5998;"></i></label>
+      <input type="text" id="custSearch" placeholder="enter customer name" />
+    </div>
+    <div class="erp-form-group">
+      <label>Mobile Number</label>
+      <input type="text" placeholder="enter mobile number" />
+    </div>
+    <div class="erp-form-group" style="flex:2;">
+      <label>Address</label>
+      <input type="text" placeholder="enter address" />
     </div>
   </div>
 
-  <div class="pos-layout">
-    <!-- LEFT: Products -->
-    <div class="pos-left">
-      <div>
-        <div class="pos-cats" id="catTabs">
-          <button class="cat-filter-btn active" data-cat="">All</button>
-          <button class="cat-filter-btn" data-cat="Grocery">Grocery</button>
-          <button class="cat-filter-btn" data-cat="Electronics">Electronics</button>
-          <button class="cat-filter-btn" data-cat="Clothing">Clothing</button>
-          <button class="cat-filter-btn" data-cat="FMCG">FMCG</button>
-          <button class="cat-filter-btn" data-cat="Pharma">Pharma</button>
-        </div>
-        <div class="item-search-bar">
-          <div style="position:relative;flex:1;">
-            <input type="text" class="ma-input" placeholder="Search product manually..." id="prodSearch" oninput="filterProducts()" style="padding-left:34px;width:100%;" />
-            <i class="fas fa-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#aaa;font-size:13px;"></i>
-          </div>
-        </div>
-      </div>
-      <div class="product-grid" id="productGrid"></div>
-    </div>
+  <!-- Barcode Search Bar -->
+  <div class="erp-search-bar" style="position:relative;">
+    <i class="fas fa-barcode"></i>
+    <input type="text" id="barcodeInput" autocomplete="off" placeholder="Search by # item or #barcode & Press tab to select items" autofocus onkeydown="handleSearchKey(event)" oninput="showSearchSuggestions(this.value)" onblur="setTimeout(() => document.getElementById('searchSuggestions').style.display='none', 200)" />
+    <div id="searchSuggestions" style="display:none; position:absolute; top:100%; left:28px; background:#fff; border:1px solid #c9cdd4; width:300px; max-height:200px; overflow-y:auto; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:4px;"></div>
+    <label style="margin-left:12px; font-size:12px;"><input type="checkbox" id="inStockOnly" onchange="showSearchSuggestions(document.getElementById('barcodeInput').value)" /> In Stock</label>
+    <div style="margin-left:auto; font-size:12px; font-weight:700;">Total Sale: <span id="cartTotal" style="color:#28a745; background:#fff; padding:2px 6px; border-radius:2px;">₹ 0.00</span></div>
+  </div>
 
-    <!-- RIGHT: Cart -->
-    <div class="pos-right">
-      <div class="cart-header">
-        <span><i class="fas fa-shopping-cart me-2" style="color:#696cff;"></i>Cart <span id="cartCount" style="font-size:12px;color:#696cff;">(0)</span></span>
-        <span id="cartTotal" style="font-size:15px;color:#696cff;">₹0.00</span>
-      </div>
-      <div class="cart-customer">
-        <div style="display:flex;gap:6px;">
-          <input type="text" class="ma-input" placeholder="Customer name / mobile..." id="custSearch" style="flex:1;font-size:12px;" />
-          <button class="btn-ma-sm btn-ma-outline" onclick="searchCustomer()"><i class="fas fa-search"></i></button>
-        </div>
-        <div id="custInfo" style="font-size:11px;color:#696cff;margin-top:4px;display:none;"></div>
-      </div>
-      
-      <div class="cart-items" id="cartItems"><div class="empty-cart"><i class="fas fa-shopping-basket"></i>Cart is empty<br><span style="font-size:11px;">Scan barcode or click products</span></div></div>
-      
-      <div class="cart-summary">
-        <div class="summary-line"><span>Subtotal</span><span id="subtotal">₹0.00</span></div>
-        <div class="summary-line" id="bargainSavingsLine" style="display:none; color:#28a745; font-weight:600;">
-          <span><i class="fas fa-tags me-1"></i>Bargain Savings</span><span id="bargainSavingsAmt">-₹0.00</span>
-        </div>
-        <div class="summary-line">
-          <span>Overall Discount (%)</span>
-          <span><input type="number" id="discountInput" min="0" max="100" value="0" style="width:55px;border:1px solid #e0e0ea;border-radius:4px;padding:2px 5px;font-size:12px;text-align:right;" oninput="recalc()"> %</span>
-        </div>
-        <div class="summary-line"><span>GST</span><span id="gstAmt">₹0.00</span></div>
-        <div class="summary-total"><span>Total</span><span id="grandTotal">₹0.00</span></div>
-      </div>
-      
-      <div class="cart-actions">
-        <div class="pay-mode-row">
-          <button class="pay-mode-btn active" data-mode="cash" onclick="setPayMode(this)"><i class="fas fa-money-bill-wave d-block mb-1"></i>Cash</button>
-          <button class="pay-mode-btn" data-mode="card" onclick="setPayMode(this)"><i class="fas fa-credit-card d-block mb-1"></i>Card</button>
-          <button class="pay-mode-btn" data-mode="upi" onclick="setPayMode(this)"><i class="fas fa-mobile-alt d-block mb-1"></i>UPI</button>
-          <button class="pay-mode-btn" data-mode="credit" onclick="setPayMode(this)"><i class="fas fa-file-invoice d-block mb-1"></i>Credit</button>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <div style="flex:1;">
-            <input type="number" class="ma-input" id="cashReceived" placeholder="Cash received..." style="font-size:13px;" oninput="calcChange()" />
+  <!-- Data Table -->
+  <div class="erp-table-wrapper">
+    <table class="erp-table">
+      <thead>
+        <tr>
+          <th style="width:40px;text-align:center;">Sno.</th>
+          <th style="width:30px;text-align:center;"><i class="fas fa-trash"></i></th>
+          <th style="width:120px;">Barcode</th>
+          <th>Item Name</th>
+          <th style="width:60px;">QTY</th>
+          <th style="width:80px;">MRP</th>
+          <th style="width:80px;">Rate</th>
+          <th style="width:70px;">Disc(%)</th>
+          <th style="width:80px;">Disc(Rs)</th>
+          <th style="width:90px;">Taxable Value</th>
+          <th style="width:60px;">GST(%)</th>
+          <th style="width:70px;">GST(Rs)</th>
+          <th style="width:90px;">Net.Amt</th>
+        </tr>
+      </thead>
+      <tbody id="cartItems">
+        <!-- Rows rendered via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  
+  
+  <!-- Left Footers -->
+  <div style="display:flex; gap:10px; margin-top:10px;">
+    <!-- Left Footer: Other Charges & Tax Detail -->
+    <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+        <div class="erp-footer-box" style="margin-bottom:0;">
+          <div class="erp-footer-box-header">Add Other Charges <i class="fas fa-plus float-end mt-1" style="cursor:pointer;" onclick="addOtherChargeRow()"></i></div>
+          <div class="erp-footer-box-body p-0">
+            <table class="erp-table" style="border:none;">
+              <thead>
+                <tr>
+                  <th style="width:30px;background:#155799;color:#fff;text-align:center;"><i class="fas fa-trash"></i></th>
+                  <th style="background:#155799;color:#fff;">Charges Name</th>
+                  <th style="width:100px;background:#155799;color:#fff;">GST Rate</th>
+                  <th style="width:100px;background:#155799;color:#fff;">GST Type</th>
+                  <th style="width:80px;background:#155799;color:#fff;">Amount</th>
+                  <th style="width:80px;background:#155799;color:#fff;">GST Amt</th>
+                  <th style="width:80px;background:#155799;color:#fff;">Total Amt</th>
+                </tr>
+              </thead>
+              <tbody id="otherChargesBody">
+                <!-- Rows dynamically added -->
+              </tbody>
+              <tbody>
+                <tr>
+                  <td colspan="4" style="text-align:right;font-weight:700;background:#155799;color:#fff;">Total Other Charges</td>
+                  <td style="background:#fff;"><input type="text" id="calcOcAmt" readonly value="0" style="width:100%;border:none;background:transparent;" /></td>
+                  <td style="background:#fff;"><input type="text" id="calcOcGst" readonly value="0" style="width:100%;border:none;background:transparent;" /></td>
+                  <td style="background:#fff;"><input type="text" id="calcOcTotal" readonly value="0" style="width:100%;border:none;background:transparent;" /></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div style="font-size:12px;color:#28a745;font-weight:600;" id="changeDisplay"></div>
         </div>
-        <button class="btn-ma-primary" style="width:100%;padding:12px;font-size:15px;font-weight:700;" onclick="processSale()">
-          <i class="fas fa-check-circle me-2"></i>Complete Sale — <span id="btnTotal">₹0.00</span>
-        </button>
+
+        <div class="erp-footer-box" style="margin-bottom:0;">
+          <div class="erp-footer-box-header">Tax Detail</div>
+          <div class="erp-footer-box-body p-2" style="background:#fff;">
+            <table style="width:100%; border-collapse:collapse; font-size:12px; font-weight:700;">
+              <tr>
+                <td style="width:100px; padding:4px;">IGST (0%)</td>
+                <td><input type="text" readonly value="0" style="width:100%; padding:2px 6px; background:#e9ecef; border:1px solid #ccc; border-radius:2px;" /></td>
+              </tr>
+              <tr>
+                <td style="padding:4px;">CGST (<span id="cgstPct">0</span>%)</td>
+                <td><input type="text" id="calcCgst" readonly value="0" style="width:100%; padding:2px 6px; background:#e9ecef; border:1px solid #ccc; border-radius:2px;" /></td>
+              </tr>
+              <tr>
+                <td style="padding:4px;">SGST (<span id="sgstPct">0</span>%)</td>
+                <td><input type="text" id="calcSgst" readonly value="0" style="width:100%; padding:2px 6px; background:#e9ecef; border:1px solid #ccc; border-radius:2px;" /></td>
+              </tr>
+              <tr>
+                <td style="padding:4px; color:red;">Total GST</td>
+                <td><input type="text" id="calcTaxTotalGst" readonly value="0" style="width:100%; padding:2px 6px; background:#e9ecef; border:1px solid #ccc; border-radius:2px;" /></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+    </div>
+    
+    <!-- Middle Footer: Credit Note -->
+    <div class="erp-footer-box" style="flex:1; margin-bottom:0;">
+      <div class="erp-footer-box-header">Credit Note/Advance Adjustment</div>
+      <div class="erp-footer-box-body p-0">
+        <table class="erp-table" style="border:none;">
+          <thead>
+            <tr>
+              <th style="background:#155799;color:#fff;">Status</th>
+              <th style="background:#155799;color:#fff;">Amount</th>
+              <th style="background:#155799;color:#fff;">Adjust</th>
+              <th style="background:#155799;color:#fff;">Balance Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="background:#fff;">
+                <select id="cnStatus" style="width:100%;border:1px solid #ccc;padding:2px;border-radius:2px;" onchange="recalc()">
+                  <option value="">Select</option>
+                  <option value="credit_note">Credit Note</option>
+                  <option value="advance">Advance</option>
+                </select>
+              </td>
+              <td style="background:#fff;"><input type="number" id="cnAmount" value="0" style="width:100%;border:1px solid #ccc;padding:2px;border-radius:2px;" oninput="recalc()" /></td>
+              <td style="background:#e9ecef;"><input type="number" id="cnAdjust" value="0" readonly style="width:100%;border:none;background:transparent;text-align:right;" /></td>
+              <td style="background:#e9ecef;"><input type="number" id="cnBalance" value="0" readonly style="width:100%;border:none;background:transparent;text-align:right;" /></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+  </div> <!-- End Left Content Column -->
+
+
+  <!-- Right Sidebar: Totals & Tender -->
+  <div style="width: 275px; background: #c5c9d1; border-left: 1px solid #c9cdd4; display: flex; flex-direction: column; overflow-y: auto;">
+      <div class="erp-sidebar-panel">
+          
+          <!-- Totals Table -->
+          <table class="erp-totals-table">
+            <tr>
+              <td class="label-col">TOTAL MRP</td>
+              <td class="val-col"><input type="text" id="calcTotalMrp" readonly value="0.00" /></td>
+            </tr>
+            <tr>
+              <td class="label-col">TOTAL SALE</td>
+              <td class="val-col"><input type="text" id="calcTotalSale" readonly value="0.00" /></td>
+            </tr>
+            <tr>
+              <td class="label-col" style="padding:0;">
+                 <table style="width:100%; border-collapse:collapse; border:none;"><tr><td style="border:none; padding:4px;">Extra Disc(%)<br><input type="number" id="calcExtraDiscPct" class="editable" value="0" oninput="calcExtraDisc('pct')" /></td></tr></table>
+              </td>
+              <td class="val-col" style="padding:0;">
+                 <table style="width:100%; border-collapse:collapse; border:none;"><tr><td style="border:none; padding:4px;">Extra Disc(Rs)<br><input type="number" id="calcExtraDiscRs" class="editable" value="0" oninput="calcExtraDisc('rs')" /></td></tr></table>
+              </td>
+            </tr>
+            <tr>
+              <td class="label-col">Taxable Value</td>
+              <td class="val-col"><input type="text" id="calcTaxable" readonly value="0.00" /></td>
+            </tr>
+            <tr>
+              <td class="label-col">GST Amt.</td>
+              <td class="val-col"><input type="text" id="calcGst" readonly value="0.00" /></td>
+            </tr>
+            <tr>
+              <td class="label-col">Gross Sale</td>
+              <td class="val-col"><input type="text" id="calcGross" readonly value="0.00" /></td>
+            </tr>
+            <tr>
+              <td class="label-col">Round Off</td>
+              <td class="val-col"><input type="number" id="calcRoundOff" class="editable" value="0" oninput="recalc()" /></td>
+            </tr>
+            <tr>
+              <td class="label-col">Total Quantity</td>
+              <td class="val-col"><input type="text" id="calcTotalQty" readonly value="0" /></td>
+            </tr>
+            <tr>
+              <td class="label-col">Total Item</td>
+              <td class="val-col"><input type="text" id="calcTotalItem" readonly value="0" /></td>
+            </tr>
+            <tr>
+              <td class="net-sale-row">NET SALE</td>
+              <td class="net-sale-row" id="calcNetSale">₹ 0</td>
+            </tr>
+          </table>
+
+          <!-- Tender Box -->
+          <div class="tender-box">
+             <div class="tender-box-header">
+                Tender 
+                <button class="btn btn-info btn-sm text-white" style="font-size:10px; font-weight:700; background:#1cbcf4; border:none;" onclick="addTenderRow()">+ ADD</button>
+             </div>
+             <div class="tender-body">
+                <div id="tenderRows">
+                    <div class="tender-row">
+                        <div style="flex:1;">Payment Mode<br><select class="tender-mode tender-input editable" onchange="calcChange()"><option value="cash">Cash</option><option value="card">Card</option><option value="upi">UPI</option></select></div>
+                        <div style="flex:1;">Amount<br><input type="number" class="tender-amount tender-input editable" value="0" oninput="calcChange()" /></div>
+                    </div>
+                </div>
+                
+                <div class="tender-row" style="margin-top:16px;">
+                    <div style="flex:1;">Cash Return<br><input type="number" id="calcCashReturn" class="tender-input" readonly value="0" /></div>
+                    <div style="flex:1;">Credit Amount<br><input type="number" id="calcCreditAmt" class="tender-input" readonly value="0" /></div>
+                </div>
+                
+                <div style="border:1px solid red; padding:6px; text-align:center; color:red; font-size:16px; font-weight:800; margin-top:10px;">
+                    NET SALE <span id="calcTenderNetSale">₹0.00</span>
+                </div>
+             </div>
+          </div>
+          
+          <button class="btn btn-primary w-100 mt-2" style="font-size:14px; font-weight:700; background:#3b5998; border:none; padding:10px;" onclick="processSale()">
+            <i class="fas fa-save me-1"></i> SAVE & PRINT
+          </button>
+      </div>
+  </div>
+
+
 </main>
+<div style="background:#3b5998; color:#fff; display:flex; justify-content:space-between; padding:8px 20px; font-size:12px; font-weight:700; align-items:center;">
+    <div>CUSTOMER PREVIOUS DUE <span style="margin-left:20px; font-size:14px; font-weight:800;">₹ 0</span></div>
+    <div>OPERATOR TODAY CREDIT SALE <span style="margin-left:20px; font-size:14px; font-weight:800;">₹ 0</span></div>
+    <div>OPERATOR TODAY NET SALE <span style="margin-left:20px; font-size:14px; font-weight:800;">₹ 0</span></div>
+</div>
+</div> <!-- End Wrapper -->
+
+
 
 <!-- Hidden Print Area -->
 <div id="printReceiptArea" style="display:none; padding:10px; background:#fff;"></div>
@@ -233,6 +418,16 @@
 const Swal2 = Swal.mixin({confirmButtonColor:'#696cff'});
 
 // Map items from store to products array. Use sale price, fallback to mrp. Allow barcode matching.
+
+document.addEventListener('DOMContentLoaded', () => {
+    let d = new Date();
+    let ds = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+    let bde = document.getElementById('billDate');
+    if(bde) bde.value = ds;
+    let bcodeInput = document.getElementById('barcodeInput');
+    if(bcodeInput) bcodeInput.focus();
+});
+
 let rawItems = MA.getAll('items');
 if (!rawItems.length) {
     // If empty store, push some mock data to show it works.
@@ -246,8 +441,8 @@ if (!rawItems.length) {
 
 const products = rawItems.map(function(i){
     return {
-        id: i.id, name: i.name, sku: i.sku||'', barcode: i.barcode||i.sku,
-        price: i.sale || i.mrp || 0, cat: i.cat||'', stock: i.stock||0, icon: 'fa-cube',
+        id: i.id, name: i.name || i.itemName || 'Unknown Item', sku: i.sku||'', barcode: i.barcode||i.sku,
+        price: i.sale || i.mrp || 0, mrp: i.mrp || i.sale || 0, cat: i.cat||'', stock: i.stock||0, icon: 'fa-cube',
         gst: parseFloat(i.gst) || 0
     };
 });
@@ -255,25 +450,9 @@ const products = rawItems.map(function(i){
 let cart = [], payMode = 'cash', currentCat = '';
 function fmtAmt(n){ return '₹'+Number(n).toFixed(2); }
 
-function filterProducts(){
-  const q = (document.getElementById('prodSearch').value || document.getElementById('globalSearch').value || '').toLowerCase();
-  const filtered = products.filter(p => {
-    if(currentCat && p.cat !== currentCat) return false;
-    if(q && !p.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
-    return true;
-  });
-  renderGrid(filtered);
-}
 
-function renderGrid(list){
-  document.getElementById('productGrid').innerHTML = list.map(p => `
-    <div class="prod-card" onclick="addToCart(${p.id})" title="${p.sku}">
-      <div class="prod-card-icon"><i class="fas ${p.icon}"></i></div>
-      <div class="prod-card-name">${p.name}</div>
-      <div class="prod-card-price">${fmtAmt(p.price)}</div>
-      <div class="prod-card-stock">${p.stock} in stock</div>
-    </div>`).join('');
-}
+
+
 
 function addToCart(id){
   const p = products.find(x => x.id === id); if(!p) return;
@@ -330,11 +509,86 @@ document.addEventListener('keypress', function(e) {
 });
 
 function handleBarcodeScan(code) {
-    const p = products.find(x => x.barcode === code || x.sku === code);
+    const term = code.trim().toLowerCase();
+    const p = products.find(x => 
+        (x.barcode && x.barcode.toLowerCase() === term) || 
+        (x.sku && x.sku.toLowerCase() === term) || 
+        (x.name && x.name.toLowerCase().includes(term))
+    );
     if (p) {
         addToCart(p.id);
     } else {
-        Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'error', title: 'Barcode not found: ' + code });
+        Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, icon: 'error', title: 'Item not found: ' + code });
+    }
+}
+
+let searchSelectedIndex = -1;
+function showSearchSuggestions(val) {
+    const term = val.trim().toLowerCase();
+    const suggBox = document.getElementById('searchSuggestions');
+    searchSelectedIndex = -1;
+    if (!term) { suggBox.style.display = 'none'; return; }
+    
+    const inStock = document.getElementById('inStockOnly').checked;
+    
+    const matches = products.filter(x => {
+        if(inStock && (x.stock === undefined || x.stock <= 0)) return false;
+        return (x.barcode && x.barcode.toLowerCase().includes(term)) || 
+               (x.sku && x.sku.toLowerCase().includes(term)) || 
+               (x.name && x.name.toLowerCase().includes(term));
+    }).slice(0, 10); // Limit to 10 suggestions
+    
+    if (matches.length === 0) { suggBox.style.display = 'none'; return; }
+    
+    suggBox.innerHTML = matches.map((m, i) => 
+        `<div class="sugg-item" style="padding:8px 12px; cursor:pointer; font-size:12px; border-bottom:1px solid #eee;" 
+              onmousedown="selectSuggestion('${m.barcode || m.sku || m.name}')"
+              onmouseover="searchSelectedIndex=${i}; updateSuggSelection()">
+            <div style="font-weight:600;">${m.name}</div>
+            <div style="color:#888; font-size:10px;">Barcode: ${m.barcode || m.sku} | MRP: ₹${m.mrp}</div>
+         </div>`
+    ).join('');
+    suggBox.style.display = 'block';
+}
+
+function updateSuggSelection() {
+    const items = document.querySelectorAll('#searchSuggestions .sugg-item');
+    items.forEach((el, i) => {
+        el.style.backgroundColor = (i === searchSelectedIndex) ? '#f0f4ff' : '#fff';
+    });
+}
+
+function selectSuggestion(code) {
+    const input = document.getElementById('barcodeInput');
+    input.value = '';
+    document.getElementById('searchSuggestions').style.display = 'none';
+    handleBarcodeScan(code);
+    input.focus();
+}
+
+function handleSearchKey(event) {
+    const suggBox = document.getElementById('searchSuggestions');
+    const isSuggVisible = suggBox.style.display === 'block';
+    const items = document.querySelectorAll('#searchSuggestions .sugg-item');
+    
+    if (event.key === 'ArrowDown' && isSuggVisible) {
+        event.preventDefault();
+        searchSelectedIndex = Math.min(searchSelectedIndex + 1, items.length - 1);
+        updateSuggSelection();
+    } else if (event.key === 'ArrowUp' && isSuggVisible) {
+        event.preventDefault();
+        searchSelectedIndex = Math.max(searchSelectedIndex - 1, -1);
+        updateSuggSelection();
+    } else if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+        if (isSuggVisible && searchSelectedIndex >= 0 && searchSelectedIndex < items.length) {
+            items[searchSelectedIndex].dispatchEvent(new MouseEvent('mousedown'));
+        } else {
+            const val = event.target.value.trim();
+            if(val) { handleBarcodeScan(val); event.target.value = ''; suggBox.style.display = 'none'; }
+        }
+    } else if (event.key === 'Escape') {
+        suggBox.style.display = 'none';
     }
 }
 
@@ -345,165 +599,363 @@ function updateBargainPrice(id, newPrice) {
     if(isNaN(val) || val < 0) val = item.price; // fallback to original if invalid
     item.bargainPrice = val;
     recalc(); // Don't re-render entire cart to avoid losing focus on input
-    
-    // Update the row total manually for UX
-    const rowTotalEl = document.getElementById('row-total-' + id);
-    if(rowTotalEl) rowTotalEl.textContent = fmtAmt(item.bargainPrice * item.qty);
 }
 
-function renderCart(){
-  const el = document.getElementById('cartItems');
-  if(!cart.length){
-      el.innerHTML = '<div class="empty-cart"><i class="fas fa-shopping-basket"></i>Cart is empty<br><span style="font-size:11px;">Scan barcode or click products</span></div>';
-      recalc(); return;
-  }
-  
-  el.innerHTML = cart.map(c => `
-    <div class="cart-row">
-      <div style="flex:1;">
-        <div class="cart-item-name">${c.name}</div>
-        <div style="font-size:10px; color:#888;">MRP: ${fmtAmt(c.price)}</div>
-        <div class="cart-item-price" style="display:flex; align-items:center; gap:4px; margin-top:2px;">
-            <span>₹</span>
-            <input type="number" class="cart-item-price-input" value="${c.bargainPrice}" 
-                onchange="updateBargainPrice(${c.id}, this.value)" title="Edit price (Bargain)" />
-            <span>each</span>
+function addToCart(id) {
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    const existing = cart.find(x => x.id === id);
+    let currentQty = existing ? existing.qty : 0;
+    let avail = p.stock || 0;
+    if (avail <= currentQty) {
+        Swal2.fire('Out of Stock', `Cannot add more. Available stock for ${p.name} is ${avail}.`, 'warning');
+        return; // block
+    }
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({...p, qty: 1, bargainPrice: p.price});
+    }
+    renderCart();
+}
+
+function renderCart() {
+    const tbody = document.getElementById('cartItems');
+    tbody.innerHTML = '';
+    cart.forEach((c, index) => {
+        const itemSubtotal = c.bargainPrice * c.qty;
+        const discountAmt = (c.price - c.bargainPrice) * c.qty;
+        const discountPct = c.price > 0 ? ((c.price - c.bargainPrice) / c.price * 100).toFixed(2) : 0;
+        
+        const taxable = itemSubtotal / (1 + (c.gst / 100));
+        const gstAmt = itemSubtotal - taxable;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="text-align:center;">${index + 1}</td>
+            <td style="text-align:center; color:red; cursor:pointer;" onclick="cart.splice(${index},1); renderCart();"><i class="fas fa-times"></i></td>
+            <td>${c.barcode || c.sku}</td>
+            <td>${c.name}</td>
+            <td style="padding:4px;"><input type="number" min="1" max="${c.stock||0}" value="${c.qty}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="if((parseInt(this.value)||1) > (c.stock||0)){ Swal2.fire('Stock Limit', `Max available is ${c.stock||0}`, 'warning'); this.value=c.stock||0; } cart[${index}].qty=parseInt(this.value)||1; recalc();"></td>
+            <td>₹${c.price.toFixed(2)}</td>
+            <td style="padding:4px;"><input type="number" min="0" value="${c.bargainPrice.toFixed(2)}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="updateBargainPrice(${c.id}, this.value)"></td>
+            <td style="color:#888;">${discountPct}%</td>
+            <td style="color:#28a745;">${discountAmt > 0 ? discountAmt.toFixed(2) : '0'}</td>
+            <td>₹${taxable.toFixed(2)}</td>
+            <td>${c.gst}%</td>
+            <td>₹${gstAmt.toFixed(2)}</td>
+            <td style="font-weight:700; color:#3b5998;">₹${itemSubtotal.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+    recalc();
+}
+let extraDiscMode = 'rs';
+
+function calcExtraDisc(mode) {
+    extraDiscMode = mode;
+    recalc();
+}
+
+function addTenderRow() {
+    const rows = document.getElementById('tenderRows');
+    const div = document.createElement('div');
+    div.className = 'tender-row';
+    div.innerHTML = `
+        <div style="flex:1;">
+            Payment Mode<br>
+            <select class="tender-mode tender-input editable" onchange="calcChange()">
+                <option value="">--Select--</option>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="upi">UPI</option>
+            </select>
+            <button class="btn btn-danger btn-sm mt-1" style="font-size:10px; padding:2px 6px;" onclick="this.parentElement.parentElement.remove(); calcChange()">Remove</button>
         </div>
-        ${c.bargainPrice < c.price ? `<div style="font-size:10px; color:#28a745; margin-top:2px; font-weight:600;"><i class="fas fa-tags me-1"></i>Bargain Disc: ₹${(c.price - c.bargainPrice).toFixed(2)}</div>` : ''}
-      </div>
-      <div class="qty-ctrl">
-        <button class="qty-btn" onclick="changeQty(${c.id}, -1)">−</button>
-        <span class="qty-val">${c.qty}</span>
-        <button class="qty-btn" onclick="changeQty(${c.id}, 1)">+</button>
-      </div>
-      <div class="cart-row-total" id="row-total-${c.id}">${fmtAmt(c.bargainPrice * c.qty)}</div>
-      <button class="btn-icon danger" style="padding:3px 7px;" onclick="removeItem(${c.id})"><i class="fas fa-times" style="font-size:10px;"></i></button>
-    </div>`).join('');
-  recalc();
+        <div style="flex:1;">
+            Amount<br>
+            <input type="number" class="tender-amount tender-input editable" value="0" oninput="calcChange()" />
+        </div>
+    `;
+    rows.appendChild(div);
 }
 
-function changeQty(id, delta){
-  const item = cart.find(x => x.id === id); if(!item) return;
-  item.qty += delta;
-  if(item.qty <= 0) cart = cart.filter(x => x.id !== id);
-  renderCart();
+function addOtherChargeRow() {
+    const tbody = document.getElementById('otherChargesBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td style="text-align:center;"><i class="fas fa-trash text-danger" style="cursor:pointer;" onclick="this.closest('tr').remove(); recalc();"></i></td>
+        <td><input type="text" class="oc-name" style="width:100%;border:1px solid #ccc;padding:2px;border-radius:2px;" placeholder="Charge Name" /></td>
+        <td>
+            <select class="oc-rate" style="width:100%;border:1px solid #ccc;padding:2px;border-radius:2px;" onchange="recalc()">
+                <option value="0">GST(0%)</option>
+                <option value="5">GST(5%)</option>
+                <option value="12">GST(12%)</option>
+                <option value="18">GST(18%)</option>
+                <option value="28">GST(28%)</option>
+            </select>
+        </td>
+        <td>
+            <select class="oc-type" style="width:100%;border:1px solid #ccc;padding:2px;border-radius:2px;" onchange="recalc()">
+                <option value="inclusive">Inclusive</option>
+                <option value="exclusive">Exclusive</option>
+            </select>
+        </td>
+        <td><input type="number" class="oc-amt" style="width:100%;border:1px solid #ccc;padding:2px;border-radius:2px;" value="0" oninput="recalc()" /></td>
+        <td style="background:#e9ecef;"><input type="text" class="oc-gst" readonly value="0" style="width:100%;border:none;background:transparent;" /></td>
+        <td style="background:#e9ecef;"><input type="text" class="oc-total" readonly value="0" style="width:100%;border:none;background:transparent;" /></td>
+    `;
+    tbody.appendChild(tr);
 }
 
-function removeItem(id){ cart = cart.filter(x => x.id !== id); renderCart(); }
+window.recalc = function() {
+  let totalMrp = 0;
+  let totalSale = 0;
+  let taxableValue = 0;
+  let gstAmt = 0;
+  let totalQty = 0;
 
-function recalc(){
-  const sub = cart.reduce((a, c) => a + (c.bargainPrice * c.qty), 0);
-  const discPct = Math.min(parseFloat(document.getElementById('discountInput').value) || 0, 100);
-  const discAmt = sub * (discPct / 100);
-  const afterDisc = sub - discAmt;
-  
-  // Calculate proportional discount for each item to apply GST correctly
-  const gst = cart.reduce((totalGst, c) => {
-      const itemSubtotal = c.bargainPrice * c.qty;
-      const itemSubAfterDisc = itemSubtotal * (1 - (discPct / 100));
-      return totalGst + (itemSubAfterDisc * (c.gst / 100));
-  }, 0);
-  const grand = afterDisc + gst;
-  
-  const originalSub = cart.reduce((a, c) => a + (c.price * c.qty), 0);
-  const bargainDiscTotal = originalSub - sub;
-  const bargainEl = document.getElementById('bargainSavingsLine');
-  if(bargainDiscTotal > 0) {
-      bargainEl.style.display = 'flex';
-      document.getElementById('bargainSavingsAmt').textContent = '-'+fmtAmt(bargainDiscTotal);
+  // 1. Calculate Cart Items
+  cart.forEach(c => {
+      totalMrp += (c.price * c.qty);
+      let itemSub = (c.bargainPrice * c.qty);
+      totalSale += itemSub;
+      totalQty += c.qty;
+  });
+
+  // Calculate Extra Discount on Items
+  let extraDiscRs = 0;
+  let extraDiscPct = 0;
+  if (extraDiscMode === 'pct') {
+      extraDiscPct = parseFloat(document.getElementById('calcExtraDiscPct').value) || 0;
+      extraDiscRs = (totalSale * extraDiscPct) / 100;
+      document.getElementById('calcExtraDiscRs').value = extraDiscRs.toFixed(2);
   } else {
-      bargainEl.style.display = 'none';
+      extraDiscRs = parseFloat(document.getElementById('calcExtraDiscRs').value) || 0;
+      extraDiscPct = totalSale > 0 ? (extraDiscRs / totalSale) * 100 : 0;
+      document.getElementById('calcExtraDiscPct').value = extraDiscPct.toFixed(2);
   }
   
-  document.getElementById('subtotal').textContent = fmtAmt(sub);
-  document.getElementById('gstAmt').textContent = fmtAmt(gst);
-  document.getElementById('grandTotal').textContent = fmtAmt(grand);
-  document.getElementById('cartTotal').textContent = fmtAmt(grand);
-  document.getElementById('btnTotal').textContent = fmtAmt(grand);
-  document.getElementById('cartCount').textContent = '('+cart.length+')';
+  let discountedSale = totalSale - extraDiscRs;
+
+  // Taxable and GST for items
+  cart.forEach(c => {
+      let itemSub = (c.bargainPrice * c.qty);
+      let itemRatio = totalSale > 0 ? (itemSub / totalSale) : 0;
+      let itemDiscSub = discountedSale * itemRatio;
+      
+      let itemTaxable = itemDiscSub / (1 + (c.gst/100));
+      let itemGst = itemDiscSub - itemTaxable;
+      
+      taxableValue += itemTaxable;
+      gstAmt += itemGst;
+  });
+
+  // 2. Calculate Other Charges
+  let totalOcAmt = 0;
+  let totalOcGst = 0;
+  let totalOcTotal = 0;
+
+  document.querySelectorAll('#otherChargesBody tr').forEach(tr => {
+      let rate = parseFloat(tr.querySelector('.oc-rate').value) || 0;
+      let type = tr.querySelector('.oc-type').value;
+      let amt = parseFloat(tr.querySelector('.oc-amt').value) || 0;
+      
+      let ocTaxable = 0;
+      let ocGstAmt = 0;
+      let ocTotalAmt = 0;
+      
+      if (type === 'inclusive') {
+          ocTotalAmt = amt;
+          ocTaxable = amt / (1 + (rate/100));
+          ocGstAmt = amt - ocTaxable;
+      } else {
+          ocTaxable = amt;
+          ocGstAmt = amt * (rate/100);
+          ocTotalAmt = amt + ocGstAmt;
+      }
+      
+      tr.querySelector('.oc-gst').value = ocGstAmt.toFixed(2);
+      tr.querySelector('.oc-total').value = ocTotalAmt.toFixed(2);
+      
+      totalOcAmt += ocTaxable;
+      totalOcGst += ocGstAmt;
+      totalOcTotal += ocTotalAmt;
+  });
+
+  if(document.getElementById('calcOcAmt')) document.getElementById('calcOcAmt').value = totalOcAmt.toFixed(2);
+  if(document.getElementById('calcOcGst')) document.getElementById('calcOcGst').value = totalOcGst.toFixed(2);
+  if(document.getElementById('calcOcTotal')) document.getElementById('calcOcTotal').value = totalOcTotal.toFixed(2);
+
+  // Combine Item Taxes + Charge Taxes
+  taxableValue += totalOcAmt;
+  gstAmt += totalOcGst;
+  let grossSale = taxableValue + gstAmt; 
+
+  // Update Tax Details Breakdown
+  // Simplified logic: Since we have mixed rates in cart & charges, calculating exact average CGST/SGST% is tricky.
+  // We'll just display Total GST / 2 for CGST/SGST amounts.
+  let halfGst = (gstAmt / 2);
+  if(document.getElementById('calcCgst')) document.getElementById('calcCgst').value = halfGst.toFixed(2);
+  if(document.getElementById('calcSgst')) document.getElementById('calcSgst').value = halfGst.toFixed(2);
+  if(document.getElementById('calcTaxTotalGst')) document.getElementById('calcTaxTotalGst').value = gstAmt.toFixed(2);
+
+  
+  // 3.5 Credit Note Logic
+  let cnAmount = 0;
+  if(document.getElementById('cnAmount')) cnAmount = parseFloat(document.getElementById('cnAmount').value) || 0;
+  let cnStatus = '';
+  if(document.getElementById('cnStatus')) cnStatus = document.getElementById('cnStatus').value;
+  
+  let cnAdjust = 0;
+  if (cnStatus && cnAmount > 0) {
+      cnAdjust = Math.min(cnAmount, grossSale);
+      grossSale -= cnAdjust;
+  }
+  
+  if(document.getElementById('cnAdjust')) document.getElementById('cnAdjust').value = cnAdjust.toFixed(2);
+  if(document.getElementById('cnBalance')) document.getElementById('cnBalance').value = (cnAmount - cnAdjust).toFixed(2);
+
+  // 3. Round Off logic
+  let roundOffInput = document.getElementById('calcRoundOff');
+  let roundOffVal = parseFloat(roundOffInput.value);
+  
+  if (isNaN(roundOffVal) || roundOffInput.value === '') {
+      let roundedGross = Math.round(grossSale);
+      roundOffVal = roundedGross - grossSale;
+      roundOffInput.value = roundOffVal.toFixed(2);
+  }
+  
+  let netSale = grossSale + roundOffVal;
+
+  if(document.getElementById('calcTotalMrp')) document.getElementById('calcTotalMrp').value = totalMrp.toFixed(2);
+  if(document.getElementById('calcTotalSale')) document.getElementById('calcTotalSale').value = totalSale.toFixed(2);
+  if(document.getElementById('calcTaxable')) document.getElementById('calcTaxable').value = taxableValue.toFixed(2);
+  if(document.getElementById('calcGst')) document.getElementById('calcGst').value = gstAmt.toFixed(2);
+  if(document.getElementById('calcGross')) document.getElementById('calcGross').value = grossSale.toFixed(2);
+  if(document.getElementById('calcTotalQty')) document.getElementById('calcTotalQty').value = totalQty;
+  if(document.getElementById('calcTotalItem')) document.getElementById('calcTotalItem').value = cart.length;
+  
+  if(document.getElementById('calcNetSale')) document.getElementById('calcNetSale').textContent = '₹ ' + netSale.toFixed(2);
+  if(document.getElementById('calcTenderNetSale')) document.getElementById('calcTenderNetSale').textContent = '₹ ' + netSale.toFixed(2);
+  if(document.getElementById('cartTotal')) document.getElementById('cartTotal').textContent = '₹ ' + netSale.toFixed(2);
+  
+  // Set tender first amount if it's the only one and empty
+  const amts = document.querySelectorAll('.tender-amount');
+  if(amts.length === 1 && parseFloat(amts[0].value) === 0 && netSale > 0) {
+      amts[0].value = netSale.toFixed(2);
+  }
+
   calcChange();
-}
+};
 
-function calcChange(){
-  const grand = parseFloat(document.getElementById('grandTotal').textContent.replace('₹','')) || 0;
-  const recv = parseFloat(document.getElementById('cashReceived').value) || 0;
-  const el = document.getElementById('changeDisplay');
-  if(payMode === 'cash' && recv > 0){
-      el.textContent = recv >= grand ? 'Change: ₹' + (recv - grand).toFixed(2) : 'Short: ₹' + (grand - recv).toFixed(2);
-      el.style.color = recv >= grand ? '#28a745' : '#dc3545';
-  } else { el.textContent = ''; }
-}
+window.calcChange = function() {
+    let netSale = parseFloat(document.getElementById('calcNetSale').textContent.replace('₹','')) || 0;
+    
+    let totalTendered = 0;
+    document.querySelectorAll('.tender-amount').forEach(inp => {
+        totalTendered += parseFloat(inp.value) || 0;
+    });
 
-function setPayMode(btn){
-  document.querySelectorAll('.pay-mode-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  payMode = btn.dataset.mode;
-  document.getElementById('cashReceived').style.display = payMode === 'cash' ? '' : 'none';
-  calcChange();
-}
+    let cashReturn = 0;
+    let creditAmt = 0;
 
-function searchCustomer(){
-  const q = document.getElementById('custSearch').value.trim();
-  if(!q) return;
-  const info = document.getElementById('custInfo');
-  info.style.display = 'block';
-  info.innerHTML = '<i class="fas fa-user me-1"></i>Arun Sharma &nbsp;|&nbsp; 9876501234 &nbsp;|&nbsp; <span style="color:#f59f00;">Gold Member · 1850 pts</span>';
-}
+    if (totalTendered >= netSale) {
+        cashReturn = totalTendered - netSale;
+    } else {
+        creditAmt = netSale - totalTendered;
+    }
 
-let pendingSaleRec = null;
+    if(document.getElementById('calcCashReturn')) document.getElementById('calcCashReturn').value = cashReturn.toFixed(2);
+    if(document.getElementById('calcCreditAmt')) document.getElementById('calcCreditAmt').value = creditAmt.toFixed(2);
+};
 
-function processSale(){
+window.processSale = function() {
   if(!cart.length){ Swal2.fire('Empty Cart','Add items to cart first.','warning'); return; }
+  const grand = parseFloat(document.getElementById('calcNetSale').textContent.replace(/[₹, ]/g,'')) || 0;
   
-  let dbItems = MA.getAll('items');
-  let changedPrices = [];
-  let lowStock = [];
+  let totalTendered = 0;
+  document.querySelectorAll('.tender-amount').forEach(el => totalTendered += (parseFloat(el.value)||0));
   
-  for (let c of cart) {
-      let dbItem = dbItems.find(i => i.id === c.id);
-      if (!dbItem) continue;
-      let dbPrice = dbItem.sale > 0 ? dbItem.sale : dbItem.mrp;
-      if (c.price !== dbPrice) changedPrices.push(c.name);
-      if ((dbItem.stock || 0) < c.qty) lowStock.push(c.name);
-  }
-  
-  if (changedPrices.length > 0) {
-      Swal2.fire('Price Changed', 'The price for ' + changedPrices.join(', ') + ' has changed in the database. Please clear and re-add them to the cart.', 'error');
+  if (totalTendered < grand) {
+      Swal2.fire({
+          title: 'Partial Payment',
+          text: `Total tendered (₹${totalTendered.toFixed(2)}) is less than Net Sale (₹${grand.toFixed(2)}). Record remainder as Credit?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, proceed'
+      }).then(r => { if(r.isConfirmed) executeSale(); });
       return;
   }
-  
-  if (lowStock.length > 0) {
-      Swal2.fire('Insufficient Stock', 'Not enough stock for: ' + lowStock.join(', '), 'error');
-      return;
-  }
-  
-  const grand = parseFloat(document.getElementById('grandTotal').textContent.replace(/[₹,]/g,'')) || 0;
-  const sub = parseFloat(document.getElementById('subtotal').textContent.replace(/[₹,]/g,'')) || 0;
-  const saleNo = document.getElementById('billNo').textContent;
-  
-  // Build Sale Record for offline storage
-  pendingSaleRec = {
-      id: MA.nextId(MA.getAll('sales')),
-      billNo: saleNo,
-      date: MA.today(),
-      time: new Date().toTimeString().slice(0,5),
-      customer: document.getElementById('custSearch').value || 'Walk-in',
-      pos: 'POS-01',
-      items: cart.map(c => ({ id: c.id, name: c.name, qty: c.qty, price: c.bargainPrice, originalPrice: c.price })),
-      subtotal: sub,
-      discountPct: document.getElementById('discountInput').value,
-      total: grand,
-      payMode: payMode,
-      status: 'completed'
-  };
+  executeSale();
+};
 
-  const gstAmountForPrint = cart.reduce((totalGst, c) => {
-      const itemSubtotal = c.bargainPrice * c.qty;
-      const itemSubAfterDisc = itemSubtotal * (1 - (document.getElementById('discountInput').value / 100));
-      return totalGst + (itemSubAfterDisc * (c.gst / 100));
-  }, 0);
+function executeSale() {
+  Swal2.fire({ title: 'Processing Payment', text: 'Please wait...', allowOutsideClick: false, didOpen: () => { Swal2.showLoading() } });
+  
+  setTimeout(() => {
+    Swal2.close();
+    
+    const grand = parseFloat(document.getElementById('calcNetSale').textContent.replace(/[₹, ]/g,'')) || 0;
+    const sub = parseFloat(document.getElementById('calcTotalSale').value) || 0;
+    const saleNo = document.getElementById('billNo') ? document.getElementById('billNo').textContent : 'SALE-001';
+    const discVal = parseFloat(document.getElementById('calcExtraDiscPct').value) || 0;
 
-  // Build Receipt HTML for printing
+    let tenderData = [];
+    let modes = document.querySelectorAll('.tender-mode');
+    let amounts = document.querySelectorAll('.tender-amount');
+    for(let i=0; i<modes.length; i++) {
+        let m = modes[i].value;
+        let a = parseFloat(amounts[i].value) || 0;
+        if(m && a > 0) tenderData.push({ mode: m, amount: a });
+    }
+
+    pendingSaleRec = {
+        id: MA.nextId(MA.getAll('sales')),
+        billNo: saleNo,
+        date: MA.today(),
+        time: new Date().toTimeString().slice(0,5),
+        customer: (document.getElementById('custSearch') ? document.getElementById('custSearch').value : '') || 'Walk-in',
+        pos: 'POS-01',
+        items: cart.map(c => ({ id: c.id, name: c.name, qty: c.qty, price: c.bargainPrice, originalPrice: c.price, gst: c.gst })),
+        subtotal: sub,
+        discountPct: discVal,
+        total: grand,
+        tender: tenderData,
+        status: 'completed'
+    };
+
+    // Deduct Stock
+    let allItems = MA.getAll('items');
+    cart.forEach(c => {
+        let idx = allItems.findIndex(x => x.id === c.id);
+        if(idx !== -1) {
+            allItems[idx].stock = (allItems[idx].stock || 0) - c.qty;
+        }
+    });
+    MA.set('items', allItems);
+    
+    let saved = MA.getAll('sales');
+    saved.push(pendingSaleRec);
+    MA.set('sales', saved);
+
+    const gstAmountForPrint = parseFloat(document.getElementById('calcGst').value) || 0;
+    const ocTotal = parseFloat(document.getElementById('calcOcTotal').value) || 0;
+    
+    // Tax Breakdown Logic
+    let taxGroups = {};
+    cart.forEach(c => {
+        let g = c.gst || 0;
+        let itemSub = (c.bargainPrice * c.qty);
+        let taxable = itemSub / (1 + (g/100));
+        let gstAmt = itemSub - taxable;
+        if(!taxGroups[g]) taxGroups[g] = { taxable: 0, gst: 0 };
+        taxGroups[g].taxable += taxable;
+        taxGroups[g].gst += gstAmt;
+    });
+    let taxBreakdownHTML = Object.keys(taxGroups).map(g => `<div style="display:flex;justify-content:space-between;font-size:10px; padding:2px 0;"><span>GST ${g}% on ₹${taxGroups[g].taxable.toFixed(2)}</span><span>${taxGroups[g].gst.toFixed(2)}</span></div>`).join('');
+
+
   let printHTML = `
     <div style="font-family:monospace; font-size:12px; color:#000; width:100%; text-align:left;">
         <div style="text-align:center; margin-bottom:12px; border-bottom:1px dashed #000; padding-bottom:8px;">
@@ -534,118 +986,36 @@ function processSale(){
         </div>
         <div style="border-top:1px dashed #000; padding-top:6px;">
           <div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Subtotal</span><span>${fmtAmt(sub)}</span></div>
-          ${document.getElementById('discountInput').value > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Extra Discount</span><span>${document.getElementById('discountInput').value}%</span></div>` : ''}
-          <div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>GST Amount</span><span>${fmtAmt(gstAmountForPrint)}</span></div>
+          ${discVal > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Extra Discount</span><span>${discVal}%</span></div>` : ''}
+          ${ocTotal > 0 ? `<div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Other Charges</span><span>${fmtAmt(ocTotal)}</span></div>` : ''}
+          <!-- Tax Breakdown Start -->
+          ${taxBreakdownHTML}
+          <div style="display:flex;justify-content:space-between;font-size:11px; padding:4px 0; border-top:1px dashed #ccc;"><span>Total GST</span><span>${fmtAmt(gstAmountForPrint)}</span></div>
+          <!-- Tax Breakdown End -->
+          <div style="display:flex;justify-content:space-between;font-size:11px; padding:2px 0;"><span>Round Off</span><span>${document.getElementById('calcRoundOff').value}</span></div>
           <div style="border-top:1px solid #000;margin-top:4px;padding-top:4px;display:flex;justify-content:space-between;font-size:14px;font-weight:800;"><span>GRAND TOTAL</span><span>${fmtAmt(grand)}</span></div>
         </div>
-        <div style="margin-top:10px; display:flex; justify-content:space-between; font-size:10px;">
-          <span>Paid via: <strong style="text-transform:capitalize;">${payMode}</strong></span>
-          ${payMode==='cash' ? `<span>Tendered: ${fmtAmt(document.getElementById('cashReceived').value||0)}</span>` : ''}
+        <div style="margin-top:10px; display:flex; justify-content:space-between; flex-direction:column; font-size:10px;">
+          ${tenderData.map(t => `<div style="display:flex; justify-content:space-between;"><span>Paid via ${t.mode.toUpperCase()}</span><span>${fmtAmt(t.amount)}</span></div>`).join('')}
         </div>
-        <div style="margin-top:14px;text-align:center;font-size:10px; border-top:1px dashed #000; padding-top:8px;">
-          Thank you for shopping with us!<br>Visit again.
+        <div style="text-align:center; font-size:10px; margin-top:15px; border-top:1px dashed #000; padding-top:10px;">
+          Thank you for shopping with us!
         </div>
     </div>`;
 
-  // UI display for the modal (includes the success checkmark)
-  let modalUI = `
-    <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:16px;">
-        <div style="background:#e8f5e9; color:#28a745; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; margin-bottom:10px;"><i class="fas fa-check"></i></div>
-        <div style="font-size:18px;font-weight:700;color:#252525;">Ready to Print</div>
-        <div style="font-size:12px;color:#888;">Print receipt to complete sale.</div>
-    </div>
-    <div style="border:1px solid #e0e0ea; border-radius:8px; padding:16px; background:#fff; overflow:hidden;">
-        ${printHTML}
-    </div>`;
-  
-  document.getElementById('receiptBody').innerHTML = modalUI;
   document.getElementById('printReceiptArea').innerHTML = printHTML;
-  
+  document.getElementById('receiptBody').innerHTML = printHTML;
   new bootstrap.Modal(document.getElementById('receiptModal')).show();
+  }, 1500); // end setTimeout
 }
+};
 
-function newSale(){
-  cart = []; renderCart(); 
-  document.getElementById('custSearch').value = ''; 
-  document.getElementById('custInfo').style.display = 'none'; 
-  document.getElementById('discountInput').value = 0; 
-  document.getElementById('cashReceived').value = '';
-  generateBillNo();
-}
-
-function clearCart(){ if(cart.length){ Swal2.fire({title:'Clear Cart?',icon:'warning',showCancelButton:true,confirmButtonText:'Clear'}).then(r=>{if(r.isConfirmed)newSale();}); } }
-
-let isPrintingReceipt = false;
-function printReceipt(){ 
-    isPrintingReceipt = true;
-    document.getElementById('printReceiptArea').style.display = 'block';
-    window.print(); 
-}
-
-window.addEventListener('afterprint', () => {
-    document.getElementById('printReceiptArea').style.display = 'none';
-    if(isPrintingReceipt && pendingSaleRec) {
-        isPrintingReceipt = false;
-        Swal2.fire({
-            title: 'Did this print correctly?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Complete Sale',
-            cancelButtonText: 'No, Abort'
-        }).then(r => {
-            if(r.isConfirmed) {
-                try {
-                    // Save sale (Server handles stock deduction atomically)
-                    MA.upsert('sales', pendingSaleRec);
-                    MA.addAudit('Sale completed: ' + pendingSaleRec.billNo + ' — ' + MA.fmt(pendingSaleRec.total));
-                    
-                    Swal2.fire({title:'Sale Completed', text:'Inventory updated.', icon:'success', timer:2000, showConfirmButton:false});
-                    bootstrap.Modal.getInstance(document.getElementById('receiptModal')).hide();
-                    newSale();
-                    pendingSaleRec = null;
-                } catch (e) {
-                    // syncRequest alerts the user, but we can also log it
-                    console.error('Sale rejected by server:', e);
-                }
-            } else {
-                Swal2.fire('Sale Aborted', 'Inventory not deducted.', 'info');
-                pendingSaleRec = null;
-            }
-        });
-    }
-});
-
-function exportSales() {
-    MA.exportToExcel('sales', 'Sales_Export');
-}
-
-function generateBillNo() {
-  const sales = MA.getAll('sales');
-  const num = String(sales.length + 1).padStart(4, '0');
-  document.getElementById('billNo').textContent = 'SALE-' + new Date().getFullYear() + '-' + num;
-}
-
-document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-  btn.addEventListener('click', function(){
-    document.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active'); currentCat = this.dataset.cat; filterProducts();
-  });
-});
-
-document.getElementById('sidebarToggle').addEventListener('click', ()=>{ document.getElementById('sidebar').classList.toggle('collapsed'); document.getElementById('maMain').classList.toggle('expanded'); });
-document.getElementById('userDropdownToggle').addEventListener('click', e => { e.stopPropagation(); document.getElementById('userDropdown').classList.toggle('show'); });
-document.addEventListener('click', () => document.getElementById('userDropdown').classList.remove('show'));
-
-// Init
-filterProducts();
-generateBillNo();
-
-// --- MA badge refresh ---
-(function(){
-  var nb = document.getElementById('navBadge'); if(nb) nb.textContent = MA.getUnreadCount() || '';
-  var comp = MA.getCompany();
-  document.querySelectorAll('.brand-text').forEach(function(el){ if(comp.name) el.textContent = comp.name; });
-})();
+window.printReceipt = function() {
+    window.print();
+};
+window.newSale = function() {
+    location.reload();
+};
 </script>
 </body>
 </html>

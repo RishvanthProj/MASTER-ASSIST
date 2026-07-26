@@ -15,10 +15,22 @@
     .barcode-price { font-size:14px; font-weight:800; color:#696cff; }
     .label-grid { display:flex; flex-wrap:wrap; gap:12px; padding:16px; background:#f8f8fd; border-radius:8px; }
     @media print {
-      .ma-navbar, .ma-sidebar, .ma-main .page-header, .filter-bar, .print-actions { display:none!important; }
-      .ma-main { margin:0!important; padding:0!important; }
-      .label-grid { background:#fff; padding: 0; gap: 4mm; display: grid; grid-template-columns: repeat(auto-fill, minmax(50mm, 1fr)); }
-      .barcode-label { width: auto; border: 1px dashed #ccc; page-break-inside: avoid; }
+      @page { margin: 0; size: 50mm 25mm; }
+      body { margin: 0; padding: 0; }
+      body > :not(.ma-main) { display: none !important; }
+      .ma-main .page-header, .filter-bar, .print-actions { display: none !important; }
+      .ma-main { margin: 0 !important; padding: 0 !important; }
+      .label-grid { display: block !important; background: #fff !important; padding: 0 !important; margin: 0 !important; }
+      .barcode-label { 
+        width: 50mm !important; 
+        height: 25mm !important; 
+        border: none !important; 
+        page-break-after: always; 
+        box-sizing: border-box; 
+        margin: 0 !important; 
+        padding: 2mm !important; 
+        overflow: hidden; 
+      }
     }
   </style>
 </head>
@@ -30,7 +42,8 @@
   <div class="ma-navbar-right ms-auto">
     <button class="navbar-icon-btn" onclick="window.location.href='notifications.html'"><i class="fas fa-bell"></i><span class="navbar-badge"><span id="navBadge">0</span></span></button>
     <div style="position:relative;"><button class="navbar-user" id="userDropdownToggle"><div class="navbar-avatar">A</div><span class="d-none d-md-inline">Admin</span><i class="fas fa-chevron-down" style="font-size:10px;opacity:0.7;"></i></button>
-    <div class="user-dropdown" id="userDropdown"><div class="user-dropdown-header"><div class="user-dropdown-name">Administrator</div><div class="user-dropdown-role">Master Assist — Super Admin</div></div><a href="profile.html"><i class="fas fa-user"></i> My Profile</a><a href="settings.html"><i class="fas fa-cog"></i> Settings</a><div class="user-dropdown-divider"></div><button onclick="window.location.href='index.html'"><i class="fas fa-sign-out-alt"></i> Logout</button></div></div>
+    <div class="user-dropdown" id="userDropdown"><div class="user-dropdown-header"><div class="user-dropdown-name">Administrator</div><div class="user-dropdown-role">Master Assist — Super Admin</div></div><a href="profile.html"><i class="fas fa-user"></i> My Profile</a>
+        <a href="#" onclick="toggleRole()"><i class="fas fa-exchange-alt"></i> Switch Role</a><a href="settings.html"><i class="fas fa-cog"></i> Settings</a><div class="user-dropdown-divider"></div><button onclick="window.location.href='index.html'"><i class="fas fa-sign-out-alt"></i> Logout</button></div></div>
   </div>
 </nav>
 <aside class="ma-sidebar" id="sidebar">
@@ -80,13 +93,13 @@
   </ul>
   <div class="sidebar-section-title">Communication</div>
   <ul class="sidebar-menu"><li><a href="sms_email.html"><span class="menu-icon"><i class="fas fa-envelope"></i></span>SMS &amp; Email</a></li></ul>
-  <div class="sidebar-section-title">Administration</div>
+  <div class="sidebar-section-title" data-admin-only>Administration</div>
   <ul class="sidebar-menu">
     <li><a href="users.html"><span class="menu-icon"><i class="fas fa-users"></i></span>User Management</a></li>
     <li><a href="area_master.html"><span class="menu-icon"><i class="fas fa-map-marker-alt"></i></span>Area Master</a></li>
     <li><a href="centers.html"><span class="menu-icon"><i class="fas fa-building"></i></span>Centers</a></li>
     <li><a href="notifications.html"><span class="menu-icon"><i class="fas fa-bell"></i></span>Notifications</a></li>
-    <li><a href="settings.html"><span class="menu-icon"><i class="fas fa-cog"></i></span>Settings</a></li>
+    <li data-admin-only><a href="settings.html"><span class="menu-icon"><i class="fas fa-cog"></i></span>Settings</a></li>
     <li><a href="settings.html"><span class="menu-icon"><i class="fas fa-history"></i></span>Audit Log</a></li>
   </ul>
   <div class="sidebar-divider"></div>
@@ -170,30 +183,51 @@ function renderLabels(){
   updateCount();
   const copies=Math.max(1,parseInt(document.getElementById('copies').value)||1);
   const selItems=items.filter(i=>selected.has(i.id));
-  document.getElementById('labelCount').textContent=(selItems.length*copies)+' labels';
+  document.getElementById('labelCount').textContent=(selItems.length*copies)+' labels (50x25mm Thermal Roll)';
   if(!selItems.length){
       document.getElementById('labelGrid').innerHTML='<div style="text-align:center;color:#bbb;width:100%;padding:30px 0;"><i class="fas fa-barcode" style="font-size:40px;display:block;margin-bottom:10px;"></i>Select items to preview labels</div>';
       return;
   }
   
+  let dbItems = MA.getAll('items');
+  let needsSave = false;
+
   let html='';
   let bcIdCounter = 0;
   let barcodeData = [];
 
   selItems.forEach(i=>{
+      // Auto-generate barcode if missing or matches SKU but user wants standard barcode format
+      if(!i.barcode || i.barcode === i.sku) {
+          // Generate a 12-digit random numeric barcode (like UPC format)
+          const newCode = '890' + Math.floor(100000000 + Math.random() * 900000000).toString();
+          i.barcode = newCode;
+          // Update in DB
+          const dbMatch = dbItems.find(x => x.id === i.id);
+          if (dbMatch) {
+              dbMatch.barcode = newCode;
+              MA.upsert('items', dbMatch);
+              needsSave = true;
+          }
+      }
+
       let priceText = i.sale ? `Sale: ₹${i.sale} (MRP: ₹${i.mrp})` : `MRP: ₹${i.mrp}`;
       for(let c=0;c<copies;c++){
           let bcId = 'bc-' + (++bcIdCounter);
           barcodeData.push({id: bcId, value: i.barcode});
-          html+=`<div class="barcode-label">
-            <div style="font-size:10px;font-weight:700;color:#696cff;letter-spacing:.5px;">MASTER ASSIST</div>
-            <svg id="${bcId}" class="barcode-img"></svg>
-            <div class="barcode-name">${i.name}</div>
-            <div class="barcode-price">${priceText}</div>
+          html+=`<div class="barcode-label" style="width: 50mm; height: 25mm; display: flex; flex-direction: column; justify-content: center; overflow: hidden; padding: 2px;">
+            <div style="font-size:8px;font-weight:700;color:#000;letter-spacing:.5px; margin-bottom:-2px;">MASTER ASSIST</div>
+            <svg id="${bcId}" class="barcode-img" style="height:12mm; width:100%;"></svg>
+            <div class="barcode-name" style="font-size:9px; color:#000;">${i.name}</div>
+            <div class="barcode-price" style="font-size:10px; font-weight:800; color:#000;">${priceText}</div>
           </div>`;
       }
   });
   
+  if (needsSave) {
+      renderList();
+  }
+
   document.getElementById('labelGrid').innerHTML=html;
   
   // Render real barcodes using JsBarcode in chunks to prevent freezing

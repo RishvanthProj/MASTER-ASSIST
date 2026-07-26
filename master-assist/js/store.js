@@ -246,3 +246,31 @@ const MA = (function () {
 })();
 
 MA.init();
+
+  function enforceRole() {
+      let role = localStorage.getItem('ma_role') || 'Admin';
+      if (role === 'Cashier') {
+          document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = 'none');
+          let ud = document.querySelector('.user-dropdown-name');
+          if(ud) ud.textContent = 'Cashier User';
+          let ur = document.querySelector('.user-dropdown-role');
+          if(ur) ur.textContent = 'Master Assist — Cashier';
+          let un = document.querySelector('.d-none.d-md-inline');
+          if(un) un.textContent = 'Cashier';
+      } else {
+          document.querySelectorAll('[data-admin-only]').forEach(el => el.style.display = '');
+          let ud = document.querySelector('.user-dropdown-name');
+          if(ud) ud.textContent = 'Administrator';
+          let ur = document.querySelector('.user-dropdown-role');
+          if(ur) ur.textContent = 'Master Assist — Super Admin';
+          let un = document.querySelector('.d-none.d-md-inline');
+          if(un) un.textContent = 'Admin';
+      }
+  }
+  window.toggleRole = function() {
+      let r = localStorage.getItem('ma_role') || 'Admin';
+      localStorage.setItem('ma_role', r === 'Admin' ? 'Cashier' : 'Admin');
+      location.reload();
+  };
+  document.addEventListener('DOMContentLoaded', enforceRole);
+
