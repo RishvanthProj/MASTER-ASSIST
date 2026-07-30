@@ -150,6 +150,7 @@
   </div>
 </main>
 
+<script src="js/printer.js"></script>
 <script src="js/store.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
@@ -261,12 +262,23 @@ function renderLabels(){
   }, 50);
 }
 
-function printSelected(){if(!selected.size){Swal2.fire('No Items','Select at least one item to print labels.','warning');return;}window.print();}
+async function printSelected(){
+    if(!selected.size){
+        Swal.fire('No Items','Select at least one item to print labels.','warning');
+        return;
+    }
+    try {
+        await window.PrinterAPI.printLabel(document.getElementById('labelGrid').innerHTML);
+    } catch (e) {
+        Swal.fire('Printer Error', e.message, 'error');
+    }
+}
 document.getElementById('copies').addEventListener('input',renderLabels);
 document.getElementById('sidebarToggle').addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('collapsed');document.getElementById('maMain').classList.toggle('expanded');});
 document.getElementById('userDropdownToggle').addEventListener('click',e=>{e.stopPropagation();document.getElementById('userDropdown').classList.toggle('show');});
 document.addEventListener('click',()=>document.getElementById('userDropdown').classList.remove('show'));
 renderList();
+window.PrinterAPI.initPrinterUI();
 
 // --- MA badge refresh ---
 (function(){

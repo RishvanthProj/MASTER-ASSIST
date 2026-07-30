@@ -411,6 +411,8 @@
   </div>
 </div>
 
+<script src="js/printer.js"></script>
+<script src="js/billing.js"></script>
 <script src="js/store.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
@@ -477,7 +479,7 @@ let barcodeBuffer = '';
 let barcodeTimer = null;
 let lastKeyTime = Date.now();
 
-document.addEventListener('keypress', function(e) {
+document.addEventListener('keydown', function(e) {
     const currentTime = Date.now();
     const timeDiff = currentTime - lastKeyTime;
     lastKeyTime = currentTime;
@@ -486,13 +488,18 @@ document.addEventListener('keypress', function(e) {
 
     if (isInput) {
         if (timeDiff > 50 && barcodeBuffer.length === 0) {
-            return;
-        } else {
+            // Start of a potential scan or just typing. Don't prevent default, but add to buffer.
+        } else if (timeDiff <= 50) {
+            // Fast typing (Scanner). Prevent default so it doesn't flood the input field.
             e.preventDefault();
+        } else {
+            // Slow typing. Reset buffer if it was stale.
+            if (timeDiff > SCANNER_TIMEOUT_MS) barcodeBuffer = '';
         }
     }
     
     if (e.key === 'Enter') {
+        console.log("ENTER PRESSED. BUFFER:", barcodeBuffer);
         if (barcodeBuffer.length > 2) {
             handleBarcodeScan(barcodeBuffer);
             e.preventDefault(); // Always prevent default if it resulted in a scan, to avoid clicking focused buttons
@@ -502,13 +509,18 @@ document.addEventListener('keypress', function(e) {
         return;
     }
     
-    barcodeBuffer += e.key;
+    if (e.key.length === 1) {
+        barcodeBuffer += e.key;
+    }
     
     clearTimeout(barcodeTimer);
     barcodeTimer = setTimeout(() => { barcodeBuffer = ''; }, SCANNER_TIMEOUT_MS);
 });
 
 function handleBarcodeScan(code) {
+    console.log("BARCODE SCANNED: '" + code + "'");
+    console.log("PRODUCTS COUNT: " + products.length);
+    console.log("PRODUCTS: " + JSON.stringify(products));
     const term = code.trim().toLowerCase();
     const p = products.find(x => 
         (x.barcode && x.barcode.toLowerCase() === term) || 
@@ -636,7 +648,7 @@ function renderCart() {
             <td style="text-align:center; color:red; cursor:pointer;" onclick="cart.splice(${index},1); renderCart();"><i class="fas fa-times"></i></td>
             <td>${c.barcode || c.sku}</td>
             <td>${c.name}</td>
-            <td style="padding:4px;"><input type="number" min="1" max="${c.stock||0}" value="${c.qty}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="if((parseInt(this.value)||1) > (c.stock||0)){ Swal2.fire('Stock Limit', `Max available is ${c.stock||0}`, 'warning'); this.value=c.stock||0; } cart[${index}].qty=parseInt(this.value)||1; recalc();"></td>
+            <td style="padding:4px;"><input type="number" min="1" max="${c.stock||0}" value="${c.qty}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="if((parseInt(this.value)||1) > (c.stock||0)){ Swal2.fire('Stock Limit', 'Max available is ' + (${c.stock||0}), 'warning'); this.value=c.stock||0; } cart[${index}].qty=parseInt(this.value)||1; recalc();"></td>
             <td>₹${c.price.toFixed(2)}</td>
             <td style="padding:4px;"><input type="number" min="0" value="${c.bargainPrice.toFixed(2)}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="updateBargainPrice(${c.id}, this.value)"></td>
             <td style="color:#888;">${discountPct}%</td>
@@ -709,142 +721,76 @@ function addOtherChargeRow() {
 }
 
 window.recalc = function() {
-  let totalMrp = 0;
-  let totalSale = 0;
-  let taxableValue = 0;
-  let gstAmt = 0;
-  let totalQty = 0;
-
-  // 1. Calculate Cart Items
-  cart.forEach(c => {
-      totalMrp += (c.price * c.qty);
-      let itemSub = (c.bargainPrice * c.qty);
-      totalSale += itemSub;
-      totalQty += c.qty;
-  });
-
-  // Calculate Extra Discount on Items
-  let extraDiscRs = 0;
-  let extraDiscPct = 0;
-  if (extraDiscMode === 'pct') {
-      extraDiscPct = parseFloat(document.getElementById('calcExtraDiscPct').value) || 0;
-      extraDiscRs = (totalSale * extraDiscPct) / 100;
-      document.getElementById('calcExtraDiscRs').value = extraDiscRs.toFixed(2);
-  } else {
-      extraDiscRs = parseFloat(document.getElementById('calcExtraDiscRs').value) || 0;
-      extraDiscPct = totalSale > 0 ? (extraDiscRs / totalSale) * 100 : 0;
-      document.getElementById('calcExtraDiscPct').value = extraDiscPct.toFixed(2);
-  }
-  
-  let discountedSale = totalSale - extraDiscRs;
-
-  // Taxable and GST for items
-  cart.forEach(c => {
-      let itemSub = (c.bargainPrice * c.qty);
-      let itemRatio = totalSale > 0 ? (itemSub / totalSale) : 0;
-      let itemDiscSub = discountedSale * itemRatio;
-      
-      let itemTaxable = itemDiscSub / (1 + (c.gst/100));
-      let itemGst = itemDiscSub - itemTaxable;
-      
-      taxableValue += itemTaxable;
-      gstAmt += itemGst;
-  });
-
-  // 2. Calculate Other Charges
-  let totalOcAmt = 0;
-  let totalOcGst = 0;
-  let totalOcTotal = 0;
+  const params = {
+      cart: cart,
+      extraDiscMode: extraDiscMode,
+      extraDiscValue: parseFloat(document.getElementById(extraDiscMode === 'pct' ? 'calcExtraDiscPct' : 'calcExtraDiscRs').value) || 0,
+      otherCharges: [],
+      cnAmount: parseFloat(document.getElementById('cnAmount')?.value) || 0,
+      cnStatus: document.getElementById('cnStatus')?.value || '',
+      manualRoundOff: (document.getElementById('calcRoundOff')?.value !== '') ? parseFloat(document.getElementById('calcRoundOff')?.value) : null
+  };
 
   document.querySelectorAll('#otherChargesBody tr').forEach(tr => {
-      let rate = parseFloat(tr.querySelector('.oc-rate').value) || 0;
-      let type = tr.querySelector('.oc-type').value;
-      let amt = parseFloat(tr.querySelector('.oc-amt').value) || 0;
-      
-      let ocTaxable = 0;
-      let ocGstAmt = 0;
-      let ocTotalAmt = 0;
-      
-      if (type === 'inclusive') {
-          ocTotalAmt = amt;
-          ocTaxable = amt / (1 + (rate/100));
-          ocGstAmt = amt - ocTaxable;
-      } else {
-          ocTaxable = amt;
-          ocGstAmt = amt * (rate/100);
-          ocTotalAmt = amt + ocGstAmt;
-      }
-      
-      tr.querySelector('.oc-gst').value = ocGstAmt.toFixed(2);
-      tr.querySelector('.oc-total').value = ocTotalAmt.toFixed(2);
-      
-      totalOcAmt += ocTaxable;
-      totalOcGst += ocGstAmt;
-      totalOcTotal += ocTotalAmt;
+      params.otherCharges.push({
+          rate: parseFloat(tr.querySelector('.oc-rate').value) || 0,
+          type: tr.querySelector('.oc-type').value,
+          amt: parseFloat(tr.querySelector('.oc-amt').value) || 0
+      });
   });
 
-  if(document.getElementById('calcOcAmt')) document.getElementById('calcOcAmt').value = totalOcAmt.toFixed(2);
-  if(document.getElementById('calcOcGst')) document.getElementById('calcOcGst').value = totalOcGst.toFixed(2);
-  if(document.getElementById('calcOcTotal')) document.getElementById('calcOcTotal').value = totalOcTotal.toFixed(2);
+  const totals = window.BillingLogic.calculateCartTotals(params);
 
-  // Combine Item Taxes + Charge Taxes
-  taxableValue += totalOcAmt;
-  gstAmt += totalOcGst;
-  let grossSale = taxableValue + gstAmt; 
-
-  // Update Tax Details Breakdown
-  // Simplified logic: Since we have mixed rates in cart & charges, calculating exact average CGST/SGST% is tricky.
-  // We'll just display Total GST / 2 for CGST/SGST amounts.
-  let halfGst = (gstAmt / 2);
-  if(document.getElementById('calcCgst')) document.getElementById('calcCgst').value = halfGst.toFixed(2);
-  if(document.getElementById('calcSgst')) document.getElementById('calcSgst').value = halfGst.toFixed(2);
-  if(document.getElementById('calcTaxTotalGst')) document.getElementById('calcTaxTotalGst').value = gstAmt.toFixed(2);
-
-  
-  // 3.5 Credit Note Logic
-  let cnAmount = 0;
-  if(document.getElementById('cnAmount')) cnAmount = parseFloat(document.getElementById('cnAmount').value) || 0;
-  let cnStatus = '';
-  if(document.getElementById('cnStatus')) cnStatus = document.getElementById('cnStatus').value;
-  
-  let cnAdjust = 0;
-  if (cnStatus && cnAmount > 0) {
-      cnAdjust = Math.min(cnAmount, grossSale);
-      grossSale -= cnAdjust;
+  // Update Extra Discount Inputs
+  if (extraDiscMode === 'pct') {
+      if(document.getElementById('calcExtraDiscRs')) document.getElementById('calcExtraDiscRs').value = totals.extraDiscRs.toFixed(2);
+  } else {
+      if(document.getElementById('calcExtraDiscPct')) document.getElementById('calcExtraDiscPct').value = totals.extraDiscPct.toFixed(2);
   }
-  
-  if(document.getElementById('cnAdjust')) document.getElementById('cnAdjust').value = cnAdjust.toFixed(2);
-  if(document.getElementById('cnBalance')) document.getElementById('cnBalance').value = (cnAmount - cnAdjust).toFixed(2);
 
-  // 3. Round Off logic
+  // Update Other Charges
+  const trs = document.querySelectorAll('#otherChargesBody tr');
+  totals.processedCharges.forEach((ch, i) => {
+      if(trs[i]) {
+          trs[i].querySelector('.oc-gst').value = ch.ocGstAmt.toFixed(2);
+          trs[i].querySelector('.oc-total').value = ch.ocTotalAmt.toFixed(2);
+      }
+  });
+
+  if(document.getElementById('calcOcAmt')) document.getElementById('calcOcAmt').value = totals.totalOcAmt.toFixed(2);
+  if(document.getElementById('calcOcGst')) document.getElementById('calcOcGst').value = totals.totalOcGst.toFixed(2);
+  if(document.getElementById('calcOcTotal')) document.getElementById('calcOcTotal').value = totals.totalOcTotal.toFixed(2);
+
+  if(document.getElementById('calcCgst')) document.getElementById('calcCgst').value = totals.halfGst.toFixed(2);
+  if(document.getElementById('calcSgst')) document.getElementById('calcSgst').value = totals.halfGst.toFixed(2);
+  if(document.getElementById('calcTaxTotalGst')) document.getElementById('calcTaxTotalGst').value = totals.gstAmt.toFixed(2);
+  
+  if(document.getElementById('cnAdjust')) document.getElementById('cnAdjust').value = totals.cnAdjust.toFixed(2);
+  if(document.getElementById('cnBalance')) document.getElementById('cnBalance').value = totals.cnBalance.toFixed(2);
+
   let roundOffInput = document.getElementById('calcRoundOff');
-  let roundOffVal = parseFloat(roundOffInput.value);
-  
-  if (isNaN(roundOffVal) || roundOffInput.value === '') {
-      let roundedGross = Math.round(grossSale);
-      roundOffVal = roundedGross - grossSale;
-      roundOffInput.value = roundOffVal.toFixed(2);
+  if (roundOffInput && (isNaN(parseFloat(roundOffInput.value)) || roundOffInput.value === '')) {
+      roundOffInput.value = totals.roundOffVal.toFixed(2);
   }
-  
-  let netSale = grossSale + roundOffVal;
 
-  if(document.getElementById('calcTotalMrp')) document.getElementById('calcTotalMrp').value = totalMrp.toFixed(2);
-  if(document.getElementById('calcTotalSale')) document.getElementById('calcTotalSale').value = totalSale.toFixed(2);
-  if(document.getElementById('calcTaxable')) document.getElementById('calcTaxable').value = taxableValue.toFixed(2);
-  if(document.getElementById('calcGst')) document.getElementById('calcGst').value = gstAmt.toFixed(2);
-  if(document.getElementById('calcGross')) document.getElementById('calcGross').value = grossSale.toFixed(2);
-  if(document.getElementById('calcTotalQty')) document.getElementById('calcTotalQty').value = totalQty;
+  if(document.getElementById('calcTotalMrp')) document.getElementById('calcTotalMrp').value = totals.totalMrp.toFixed(2);
+  if(document.getElementById('calcTotalSale')) document.getElementById('calcTotalSale').value = totals.totalSale.toFixed(2);
+  if(document.getElementById('calcTaxable')) document.getElementById('calcTaxable').value = totals.taxableValue.toFixed(2);
+  if(document.getElementById('calcGst')) document.getElementById('calcGst').value = totals.gstAmt.toFixed(2);
+  if(document.getElementById('calcGross')) document.getElementById('calcGross').value = totals.grossSale.toFixed(2);
+  if(document.getElementById('calcTotalQty')) document.getElementById('calcTotalQty').value = totals.totalQty;
   if(document.getElementById('calcTotalItem')) document.getElementById('calcTotalItem').value = cart.length;
   
-  if(document.getElementById('calcNetSale')) document.getElementById('calcNetSale').textContent = '₹ ' + netSale.toFixed(2);
-  if(document.getElementById('calcTenderNetSale')) document.getElementById('calcTenderNetSale').textContent = '₹ ' + netSale.toFixed(2);
-  if(document.getElementById('cartTotal')) document.getElementById('cartTotal').textContent = '₹ ' + netSale.toFixed(2);
+  if(document.getElementById('calcNetSale')) document.getElementById('calcNetSale').textContent = '₹ ' + totals.netSale.toFixed(2);
+  if(document.getElementById('calcTenderNetSale')) document.getElementById('calcTenderNetSale').textContent = '₹ ' + totals.netSale.toFixed(2);
+  if(document.getElementById('cartTotal')) document.getElementById('cartTotal').textContent = '₹ ' + totals.netSale.toFixed(2);
   
   // Set tender first amount if it's the only one and empty
   const amts = document.querySelectorAll('.tender-amount');
-  if(amts.length === 1 && parseFloat(amts[0].value) === 0 && netSale > 0) {
-      amts[0].value = netSale.toFixed(2);
+  if(amts.length === 1 && parseFloat(amts[0].value) === 0 && totals.netSale > 0) {
+      amts[0].value = totals.netSale.toFixed(2);
   }
+
 
   calcChange();
 };
@@ -1008,14 +954,18 @@ function executeSale() {
   new bootstrap.Modal(document.getElementById('receiptModal')).show();
   }, 1500); // end setTimeout
 }
-};
 
-window.printReceipt = function() {
-    window.print();
+window.printReceipt = async function() {
+    try {
+        await window.PrinterAPI.printReceipt(document.getElementById('printReceiptArea').innerHTML);
+    } catch (e) {
+        Swal.fire('Printer Error', e.message, 'error');
+    }
 };
 window.newSale = function() {
     location.reload();
 };
+window.PrinterAPI.initPrinterUI();
 </script>
 </body>
 </html>

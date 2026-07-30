@@ -343,6 +343,9 @@ app.post('/api/sales', (req, res) => {
 
 // POST /api/sales/import (raw import for migration, no stock deduction)
 app.post('/api/sales/import', (req, res) => {
+    if (!req.body || typeof req.body !== 'object' || !Array.isArray(req.body.items)) {
+        return res.status(400).json({ error: "Invalid payload format. Expected object with 'items' array." });
+    }
     withLock(async () => {
         try {
             const wb = await getWorkbook();
@@ -394,4 +397,8 @@ async function startServer() {
     }
 }
 
-startServer();
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;
