@@ -80,8 +80,10 @@ class RealPrinterService extends PrinterService {
     async printReceipt(html) {
         if (!this.connected) throw new Error("Printer not connected");
         return new Promise((resolve) => {
-            // Trigger browser print dialog for receipt
-            window.print();
+            this._printViaIframe(html, `
+                @page { margin: 0; width: 58mm; }
+                body { font-family: monospace; padding: 0; margin: 0; width: 58mm; }
+            `);
             resolve(true);
         });
     }
@@ -89,10 +91,62 @@ class RealPrinterService extends PrinterService {
     async printLabel(html) {
         if (!this.connected) throw new Error("Printer not connected");
         return new Promise((resolve) => {
-            // Trigger browser print dialog for label
-            window.print();
+            this._printViaIframe(html, `
+                @page { margin: 0; width: 50mm; }
+                body { 
+                    margin: 0; 
+                    padding: 0; 
+                    width: 50mm; 
+                    display: flex;
+                    flex-direction: column;
+                }
+                .barcode-label { 
+                    width: 50mm !important; 
+                    height: 25mm !important; 
+                    border: none !important; 
+                    box-sizing: border-box !important; 
+                    margin: 0 !important; 
+                    padding: 2mm !important; 
+                    overflow: hidden !important; 
+                    display: flex !important;
+                    flex-direction: column !important;
+                    justify-content: center !important;
+                    flex-shrink: 0 !important;
+                }
+                /* Hide the preview container grid styles when printing */
+                .label-grid { display: block !important; padding: 0 !important; margin: 0 !important; }
+            `);
             resolve(true);
         });
+    }
+
+    _printViaIframe(html, css) {
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0px';
+        iframe.style.height = '0px';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <html>
+            <head>
+                <style>${css}</style>
+            </head>
+            <body>${html}</body>
+            </html>
+        `);
+        doc.close();
+
+        iframe.contentWindow.focus();
+        setTimeout(() => {
+            iframe.contentWindow.print();
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500); // Wait for fonts/svgs to render
     }
 }
 
