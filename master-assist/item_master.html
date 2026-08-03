@@ -129,7 +129,7 @@
         <input type="hidden" id="editId" />
         <div class="row g-3">
           <div class="col-md-4"><label class="form-label">Item Name <span style="color:red">*</span></label><input type="text" class="ma-input w-100" id="iName" /></div>
-          <div class="col-md-2"><label class="form-label">SKU <span style="color:red">*</span></label><input type="text" class="ma-input w-100" id="iSKU" /></div>
+          <div class="col-md-2"><label class="form-label">SKU <span style="color:red">*</span></label><input type="text" class="ma-input w-100" id="iSKU" maxlength="20" /></div>
           <div class="col-md-2"><label class="form-label">Barcode</label><input type="text" class="ma-input w-100" id="iBarcode" /></div>
           <div class="col-md-2"><label class="form-label">HSN Code</label><input type="text" class="ma-input w-100" id="iHSN" /></div>
           <div class="col-md-2"><label class="form-label">Unit</label>
@@ -150,10 +150,11 @@
           <div class="col-md-2"><label class="form-label">Status</label>
             <select class="ma-select w-100" id="iStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
           </div>
-          <div class="col-md-3"><label class="form-label">Purchase Price (₹)</label><input type="number" class="ma-input w-100" id="iPurchase" step="0.01" /></div>
-          <div class="col-md-3"><label class="form-label">Sale Price (₹)</label><input type="number" class="ma-input w-100" id="iSale" step="0.01" /></div>
-          <div class="col-md-3"><label class="form-label">MRP (₹)</label><input type="number" class="ma-input w-100" id="iMRP" step="0.01" /></div>
+          <div class="col-md-2"><label class="form-label">Purchase Price (₹)</label><input type="number" class="ma-input w-100" id="iPurchase" step="0.01" /></div>
+          <div class="col-md-2"><label class="form-label">Sale Price (₹)</label><input type="number" class="ma-input w-100" id="iSale" step="0.01" /></div>
+          <div class="col-md-2"><label class="form-label">MRP (₹)</label><input type="number" class="ma-input w-100" id="iMRP" step="0.01" /></div>
           <div class="col-md-3"><label class="form-label">Min Stock Level</label><input type="number" class="ma-input w-100" id="iMinStock" /></div>
+          <div class="col-md-3"><label class="form-label">Opening/Available Stock <span style="color:red">*</span></label><input type="number" class="ma-input w-100" id="iStock" value="0" /></div>
           <div class="col-12"><label class="form-label">Description</label><textarea class="ma-textarea w-100" id="iDesc" rows="2"></textarea></div>
         </div>
       </div>
@@ -235,7 +236,8 @@ function renderTable(){
 function openAdd(){
   document.getElementById('modalTitle').textContent='Add Item';document.getElementById('editId').value='';
   ['iName','iSKU','iBarcode','iHSN','iDesc'].forEach(id=>document.getElementById(id).value='');
-  ['iPurchase','iSale','iMRP','iMinStock'].forEach(id=>document.getElementById(id).value='');
+  ['iPurchase','iSale','iMRP','iMinStock','iStock'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iStock').value='0';
   document.getElementById('iUnit').value='Pcs';document.getElementById('iCat').value='Grocery';
   document.getElementById('iBrand').value='Local';document.getElementById('iGST').value='';
   document.getElementById('iStatus').value='active';
@@ -251,6 +253,7 @@ function editItem(id){
   document.getElementById('iTaxType').value=it.taxType;document.getElementById('iStatus').value=it.status;
   document.getElementById('iPurchase').value=it.purchase;document.getElementById('iSale').value=it.sale;
   document.getElementById('iMRP').value=it.mrp;document.getElementById('iMinStock').value=it.minStock;
+  document.getElementById('iStock').value=it.stock||0;
   document.getElementById('iDesc').value=it.desc||'';
   new bootstrap.Modal(document.getElementById('itemModal')).show();
 }
@@ -266,28 +269,59 @@ function saveItem(){
   let barcodeValue = document.getElementById('iBarcode').value.trim();
   if (!barcodeValue) {
       barcodeValue = '890' + Math.floor(100000000 + Math.random() * 900000000).toString();
-      // Optional: Set the field visually if user re-opens, though modal will close
       document.getElementById('iBarcode').value = barcodeValue;
   }
   
-  const data={name,sku,barcode:barcodeValue,hsn:document.getElementById('iHSN').value.trim(),unit:document.getElementById('iUnit').value,cat:document.getElementById('iCat').value,brand:document.getElementById('iBrand').value,gst:document.getElementById('iGST').value,taxType:document.getElementById('iTaxType').value,status:document.getElementById('iStatus').value,purchase:parseFloat(document.getElementById('iPurchase').value)||0,sale:parseFloat(document.getElementById('iSale').value)||0,mrp:parseFloat(document.getElementById('iMRP').value)||0,minStock:parseInt(document.getElementById('iMinStock').value)||0,desc:document.getElementById('iDesc').value.trim()};
+  const data={
+      name,sku,barcode:barcodeValue,
+      hsn:document.getElementById('iHSN').value.trim(),
+      unit:document.getElementById('iUnit').value,
+      cat:document.getElementById('iCat').value,
+      brand:document.getElementById('iBrand').value,
+      gst:document.getElementById('iGST').value,
+      taxType:document.getElementById('iTaxType').value,
+      status:document.getElementById('iStatus').value,
+      purchase:parseFloat(document.getElementById('iPurchase').value)||0,
+      sale:parseFloat(document.getElementById('iSale').value)||0,
+      mrp:parseFloat(document.getElementById('iMRP').value)||0,
+      minStock:parseInt(document.getElementById('iMinStock').value)||0,
+      stock:parseInt(document.getElementById('iStock').value)||0,
+      desc:document.getElementById('iDesc').value.trim()
+  };
   
-  if (data.purchase < 0 || data.sale < 0 || data.mrp < 0 || data.minStock < 0) {
+  if (data.purchase < 0 || data.sale < 0 || data.mrp < 0 || data.minStock < 0 || data.stock < 0) {
       alert('Prices and Stock cannot be negative.');
       return;
   }
   
   if(eid){ data.id = parseInt(eid); }
-  else { data.stock = 0; } // default stock 0 for new item
   
-  
-  try {
-      MA.upsert('items', data);
-      items = MA.getAll('items'); // Reload from server
-      bootstrap.Modal.getInstance(document.getElementById('itemModal')).hide();
-      applyFilters();
-  } catch (e) {
-      // Error is handled by syncRequest alert, but we can do further UI changes if needed
+  const performSave = () => {
+      try {
+          MA.upsert('items', data);
+          items = MA.getAll('items'); // Reload from server
+          bootstrap.Modal.getInstance(document.getElementById('itemModal')).hide();
+          applyFilters();
+      } catch (e) {
+          console.error(e);
+      }
+  };
+
+  if (data.stock === 0) {
+      Swal2.fire({
+          title: 'Save with 0 stock?',
+          text: "This item won't be sellable until stock is added.",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Save anyway',
+          cancelButtonText: 'Cancel'
+      }).then(r => {
+          if (r.isConfirmed) {
+              performSave();
+          }
+      });
+  } else {
+      performSave();
   }
 }
 function deleteItem(id){

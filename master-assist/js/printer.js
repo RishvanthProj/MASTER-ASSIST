@@ -1,7 +1,113 @@
 /**
  * PrinterService API
  * Abstracts hardware printer commands to allow mock testing and error simulation.
+ *
+ * PRINTER_PROFILES — Validated hardware profiles for 58mm thermal printers.
+ * All sizing math uses 384-dot (48mm) printable width ceiling at 203 DPI.
+ *
+ * Changelog:
+ *   2026-08-03 — Added PSF20 / H58i profiles; fixed label width 50mm→48mm;
+ *                fixed receipt width 80mm→48mm for 58mm printers.
  */
+
+const PRINTER_PROFILES = {
+    /** POSiFLOW PSF20 — Label printer, ESC/POS confirmed */
+    PSF20: {
+        displayName:      'POSiFLOW PSF20',
+        dpi:              203,
+        paperWidthMm:     58,
+        printableWidthMm: 48,      // ~5mm dead margin per side
+        printableWidthDots: 384,   // 48 × 7.992 ≈ 384
+        dotsPerMm:        7.992,   // 203 / 25.4
+        duplex:           false,
+        feedModel:        'label', // single-label feed — needs gap detection
+        connectionType:   'bluetooth_spp', // Bluetooth Classic SPP
+        protocol:         'escpos',
+        protocolConfirmed: true,
+        labelHeightMm:    25,      // typical label stock
+        notes:            'Confirmed ESC/POS via ShreyansPOS ecosystem. Gap-detect feed.'
+    },
+
+    /** helett H58i (BillQuick-Go) — Receipt printer, ESC/POS probable */
+    H58i: {
+        displayName:      'helett H58i BillQuick-Go',
+        dpi:              203,
+        paperWidthMm:     58,
+        printableWidthMm: 48,
+        printableWidthDots: 384,
+        dotsPerMm:        7.992,
+        duplex:           false,
+        feedModel:        'continuous', // continuous roll — needs cut command
+        connectionType:   'bluetooth_spp', // assumed SPP, BLE possible
+        protocol:         'escpos',
+        protocolConfirmed: false,  // NOT confirmed by vendor docs
+        labelHeightMm:    null,    // continuous — no fixed label height
+        notes:            'ESC/POS probable but unconfirmed. No official SDK. Physical test required.'
+    },
+
+    /** Generic 80mm — Kept for backward compatibility with existing receipt layout */
+    GENERIC_80MM: {
+        displayName:      'Generic 80mm Receipt Printer',
+        dpi:              203,
+        paperWidthMm:     80,
+        printableWidthMm: 72,
+        printableWidthDots: 576,   // 72 × 8
+        dotsPerMm:        7.992,
+        duplex:           false,
+        feedModel:        'continuous',
+        connectionType:   'usb',
+        protocol:         'escpos',
+        protocolConfirmed: true,
+        labelHeightMm:    null,
+        notes:            'Legacy profile. Matches the original 80mm receipt layout.'
+    }
+};
+
+/** Active profile key — change this to switch target printer */
+let _activeProfileKey = 'PSF20';
+
+function getActiveProfile() {
+    return PRINTER_PROFILES[_activeProfileKey] || PRINTER_PROFILES.PSF20;
+}
+
+function setActiveProfile(key) {
+    if (!PRINTER_PROFILES[key]) {
+        console.warn('Unknown printer profile: ' + key + '. Falling back to PSF20.');
+        _activeProfileKey = 'PSF20';
+    } else {
+        _activeProfileKey = key;
+    }
+}
+
+/** Barcode sizing constants (CODE128) */
+const BARCODE_SIZING = {
+    modulesPerChar: 11,         // CODE128: 11 modules per data character
+    startStopChecksum: 35,      // overhead modules for start/stop/checksum
+    defaultModuleWidthDots: 2.0, // Reclaimed width: target 2.0 dots per module for optimal scanning
+
+    /** Find the largest module width that fits in 384 dots (tries 2.0, then 1.5, then 1.0) */
+    getSafeModuleWidth(codeValue) {
+        const modules = (codeValue.length * this.modulesPerChar) + this.startStopChecksum;
+        if (modules * 2.0 <= 384) return 2.0;
+        if (modules * 1.5 <= 384) return 1.5;
+        return 1.0;
+    },
+
+    /** Calculate barcode width in dots for a given code value */
+    calcWidthDots(codeValue, moduleWidth) {
+        const mw = moduleWidth || this.getSafeModuleWidth(codeValue);
+        const modules = (codeValue.length * this.modulesPerChar) + this.startStopChecksum;
+        return modules * mw;
+    },
+
+    /** Max safe character count for a given module width and max dot width */
+    maxSafeChars(moduleWidth, maxDots) {
+        const mw = moduleWidth || this.defaultModuleWidthDots;
+        const md = maxDots || 384;
+        return Math.floor((md / mw - this.startStopChecksum) / this.modulesPerChar);
+    }
+};
+
 class PrinterService {
     constructor() {
         this.connected = false;
@@ -79,10 +185,12 @@ class RealPrinterService extends PrinterService {
 
     async printReceipt(html) {
         if (!this.connected) throw new Error("Printer not connected");
+        const profile = getActiveProfile();
+        const w = profile.printableWidthMm + 'mm';
         return new Promise((resolve) => {
             this._printViaIframe(html, `
-                @page { margin: 0; width: 58mm; }
-                body { font-family: monospace; padding: 0; margin: 0; width: 58mm; }
+                @page { margin: 0; width: ${w}; }
+                body { font-family: monospace; padding: 0; margin: 0; width: ${w}; }
             `);
             resolve(true);
         });
@@ -90,19 +198,22 @@ class RealPrinterService extends PrinterService {
 
     async printLabel(html) {
         if (!this.connected) throw new Error("Printer not connected");
+        const profile = getActiveProfile();
+        const w = profile.printableWidthMm + 'mm';  // 48mm for 58mm stock
+        const h = (profile.labelHeightMm || 25) + 'mm';
         return new Promise((resolve) => {
             this._printViaIframe(html, `
-                @page { margin: 0; width: 50mm; }
+                @page { margin: 0; width: ${w}; }
                 body { 
                     margin: 0; 
                     padding: 0; 
-                    width: 50mm; 
+                    width: ${w}; 
                     display: flex;
                     flex-direction: column;
                 }
                 .barcode-label { 
-                    width: 50mm !important; 
-                    height: 25mm !important; 
+                    width: ${w} !important; 
+                    height: ${h} !important; 
                     border: none !important; 
                     box-sizing: border-box !important; 
                     margin: 0 !important; 
@@ -202,6 +313,10 @@ class MockPrinterService extends PrinterService {
 }
 
 // Attach globally
+window.PRINTER_PROFILES = PRINTER_PROFILES;
+window.BARCODE_SIZING = BARCODE_SIZING;
+window.getActiveProfile = getActiveProfile;
+window.setActiveProfile = setActiveProfile;
 window.PrinterAPI = new RealPrinterService();
 window.RealPrinterService = RealPrinterService;
 window.MockPrinterService = MockPrinterService;

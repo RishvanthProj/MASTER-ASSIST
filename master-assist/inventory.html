@@ -287,7 +287,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
 <script>
-  var items = MA.getAll('inventory');
+  var items = MA.getAll('items');
 
   var filtered=items.slice(), currentTab='all', currentPage=1, rowsPerPage=10;
 
@@ -365,11 +365,11 @@
           '<td style="font-weight:500;">'+it.name+'</td>'+
           '<td><span class="cat-badge">'+it.cat+'</span></td>'+
           '<td style="color:#888;font-size:12px;">'+it.unit+'</td>'+
-          '<td style="font-weight:600;">₹'+it.rate+'</td>'+
+          '<td style="font-weight:600;">₹'+(it.rate||it.sale||0)+'</td>'+
           '<td><strong style="color:'+(it.stock===0?'#dc3545':it.stock<=it.minStock?'#b08000':'#252525')+';">'+it.stock+'</strong></td>'+
           '<td style="color:#aaa;font-size:12px;">'+it.minStock+'</td>'+
           '<td style="min-width:100px;">'+stockStatus(it)+'<div class="stock-bar"><div class="stock-fill '+stockClass(it)+'" style="width:'+pct+'%;"></div></div></td>'+
-          '<td style="font-size:12px;color:#888;">'+it.warehouse+'</td>'+
+          '<td style="font-size:12px;color:#888;">'+(it.warehouse||'')+'</td>'+
           '<td style="white-space:nowrap;">'+
             '<button class="btn-icon edit-item-btn" data-id="'+it.id+'" title="Edit"><i class="fas fa-edit"></i></button> '+
             '<button class="btn-icon success adj-stock-btn" data-id="'+it.id+'" title="Adjust Stock"><i class="fas fa-sliders-h"></i></button> '+
@@ -412,10 +412,10 @@
       document.getElementById('iName').value=it.name;
       document.getElementById('iCat').value=it.cat;
       document.getElementById('iUnit').value=it.unit;
-      document.getElementById('iRate').value=it.rate;
+      document.getElementById('iRate').value=it.rate||it.sale||0;
       document.getElementById('iStock').value=it.stock;
       document.getElementById('iMinStock').value=it.minStock;
-      document.getElementById('iWarehouse').value=it.warehouse;
+      document.getElementById('iWarehouse').value=it.warehouse||'';
       document.getElementById('itemModalTitle').innerHTML='<i class="fas fa-edit" style="color:#696cff;margin-right:7px;"></i>Edit Item';
       document.getElementById('itemModal').classList.add('open');
     }
@@ -435,7 +435,8 @@
       }).then(function(r){
         if(r.isConfirmed){
           it2.stock=Math.max(0,it2.stock+r.value);
-          MA.set('inventory',items);
+          MA.upsert('items',it2);
+          items=MA.getAll('items');
           applyFilters();
           showAlert('success','Stock for '+it2.name+' updated to '+it2.stock+' '+it2.unit+'.');
         }
@@ -446,7 +447,12 @@
       var id3=parseInt(dBtn.dataset.id);
       var it3=items.find(function(x){return x.id===id3;});
       Swal.fire({title:'Delete '+it3.name+'?',icon:'warning',showCancelButton:true,confirmButtonColor:'#dc3545',confirmButtonText:'Delete'}).then(function(r){
-        if(r.isConfirmed){items=items.filter(function(x){return x.id!==id3;});MA.set('inventory',items);applyFilters();showAlert('success',it3.name+' removed.');}
+        if(r.isConfirmed){
+          MA.remove('items',id3);
+          items=MA.getAll('items');
+          applyFilters();
+          showAlert('success',it3.name+' removed.');
+        }
       });
     }
   });
@@ -466,13 +472,37 @@
     var editId=document.getElementById('editItemId').value;
     if(editId){
       var it=items.find(function(x){return x.id===parseInt(editId);});
-      if(it){it.sku=sku;it.name=name;it.cat=document.getElementById('iCat').value;it.unit=document.getElementById('iUnit').value;it.rate=parseFloat(document.getElementById('iRate').value)||0;it.stock=parseInt(document.getElementById('iStock').value)||0;it.minStock=parseInt(document.getElementById('iMinStock').value)||0;it.warehouse=document.getElementById('iWarehouse').value;}
+      if(it){
+        it.sku=sku;
+        it.name=name;
+        it.cat=document.getElementById('iCat').value;
+        it.unit=document.getElementById('iUnit').value;
+        it.sale=parseFloat(document.getElementById('iRate').value)||0;
+        it.rate=it.sale;
+        it.stock=parseInt(document.getElementById('iStock').value)||0;
+        it.minStock=parseInt(document.getElementById('iMinStock').value)||0;
+        it.warehouse=document.getElementById('iWarehouse').value;
+        MA.upsert('items', it);
+      }
       showAlert('success',name+' updated.');
     } else {
-      items.push({id:items.length+1,sku,name,cat:document.getElementById('iCat').value,unit:document.getElementById('iUnit').value,rate:parseFloat(document.getElementById('iRate').value)||0,stock:parseInt(document.getElementById('iStock').value)||0,minStock:parseInt(document.getElementById('iMinStock').value)||0,warehouse:document.getElementById('iWarehouse').value});
+      var newItem = {
+        sku: sku,
+        name: name,
+        cat: document.getElementById('iCat').value,
+        unit: document.getElementById('iUnit').value,
+        sale: parseFloat(document.getElementById('iRate').value)||0,
+        rate: parseFloat(document.getElementById('iRate').value)||0,
+        stock: parseInt(document.getElementById('iStock').value)||0,
+        minStock: parseInt(document.getElementById('iMinStock').value)||0,
+        warehouse: document.getElementById('iWarehouse').value,
+        purchase: (parseFloat(document.getElementById('iRate').value)||0) * 0.8,
+        mrp: parseFloat(document.getElementById('iRate').value)||0
+      };
+      MA.upsert('items', newItem);
       showAlert('success',name+' added.');
     }
-    MA.set('inventory',items);
+    items=MA.getAll('items');
     document.getElementById('itemModal').classList.remove('open');
     applyFilters();
   });
@@ -504,8 +534,8 @@
           confirmButtonText: 'Import'
       }).then(function(result) {
           if (result.isConfirmed) {
-              MA.importFromExcel(file, 'inventory', function(count) {
-                  items = MA.getAll('inventory'); // reload items
+              MA.importFromExcel(file, 'items', function(count) {
+                  items = MA.getAll('items'); // reload items
                   applyFilters();
                   showAlert('success', count + ' records imported successfully.');
                   document.getElementById('importExcelFile').value = ''; // clear input
@@ -517,7 +547,7 @@
   });
 
   function exportInventory() {
-      MA.exportToExcel('inventory', 'Inventory_Export');
+      MA.exportToExcel('items', 'Inventory_Export');
   }
 
   /* ---- Sidebar ---- */
@@ -534,7 +564,7 @@
 
 
 (function(){
-  var whs=[...new Set(MA.getAll('inventory').map(function(i){return i.warehouse;}))];
+  var whs=[...new Set(MA.getAll('items').map(function(i){return i.warehouse || '';}))].filter(Boolean);
   var wh1=document.getElementById('_wh1');
   if(wh1){var parent=wh1.parentElement;parent.innerHTML='<option value="">All Warehouses</option>'+whs.map(function(w){return '<option>'+w+'</option>';}).join('');}
 })();

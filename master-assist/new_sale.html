@@ -36,6 +36,9 @@
       body > :not(#printReceiptArea) { display: none !important; }
       #printReceiptArea { display: block !important; position: static !important; width: 80mm; box-sizing: border-box; font-family: monospace; padding: 5mm; margin: 0; }
       #printReceiptArea * { visibility: visible; }
+      /* 58mm printer override — activated by JS adding class to body */
+      body.printer-58mm #printReceiptArea { width: 48mm; padding: 3mm; }
+      body.printer-58mm { }
     }
   
     .erp-sidebar-panel { padding: 8px; }
@@ -174,7 +177,7 @@
   <div class="erp-search-bar" style="position:relative;">
     <i class="fas fa-barcode"></i>
     <input type="text" id="barcodeInput" autocomplete="off" placeholder="Search by # item or #barcode & Press tab to select items" autofocus onkeydown="handleSearchKey(event)" oninput="showSearchSuggestions(this.value)" onblur="setTimeout(() => document.getElementById('searchSuggestions').style.display='none', 200)" />
-    <div id="searchSuggestions" style="display:none; position:absolute; top:100%; left:28px; background:#fff; border:1px solid #c9cdd4; width:300px; max-height:200px; overflow-y:auto; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:4px;"></div>
+    <div id="searchSuggestions" style="display:none; position:absolute; top:100%; left:28px; background:#fff; border:1px solid #c9cdd4; width:300px; max-height:200px; overflow-y:auto; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1); border-radius:4px; color:#212529;"></div>
     <label style="margin-left:12px; font-size:12px;"><input type="checkbox" id="inStockOnly" onchange="showSearchSuggestions(document.getElementById('barcodeInput').value)" /> In Stock</label>
     <div style="margin-left:auto; font-size:12px; font-weight:700;">Total Sale: <span id="cartTotal" style="color:#28a745; background:#fff; padding:2px 6px; border-radius:2px;">₹ 0.00</span></div>
   </div>
@@ -323,6 +326,22 @@
               </td>
             </tr>
             <tr>
+              <td class="label-col" colspan="2" style="background:#e9ecf0; border-bottom:1px solid #c9cdd4; padding:6px 10px;">
+                <div style="font-size:11px; font-weight:700; color:#495057; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                  <span>DISCOUNT COUPON</span>
+                  <a href="#" id="removeCouponBtn" style="color:#dc3545; display:none; text-decoration:none; font-size:10px; font-weight:700;" onclick="removeCoupon(event)"><i class="fas fa-times-circle"></i> Remove</a>
+                </div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                  <input type="text" id="couponCodeInput" placeholder="ENTER COUPON CODE" style="flex:1; padding:3px 6px; font-size:11px; border:1px solid #ced4da; border-radius:4px; text-transform:uppercase;" onkeydown="if(event.key==='Enter') { applyTypedCoupon(); event.preventDefault(); }" />
+                  <button class="btn btn-primary btn-sm" style="font-size:10px; padding:3px 8px; font-weight:600;" onclick="applyTypedCoupon()">APPLY</button>
+                </div>
+                <select id="couponSelect" style="width:100%; padding:3px; font-size:11px; border:1px solid #ced4da; border-radius:4px;" onchange="selectCoupon(this.value)">
+                  <option value="">-- Or Select Active Coupon --</option>
+                </select>
+                <div id="couponMessage" style="font-size:10px; margin-top:5px; font-weight:600; display:none; padding:5px; border-radius:4px; text-align:left;"></div>
+              </td>
+            </tr>
+            <tr>
               <td class="label-col">Taxable Value</td>
               <td class="val-col"><input type="text" id="calcTaxable" readonly value="0.00" /></td>
             </tr>
@@ -428,6 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(bde) bde.value = ds;
     let bcodeInput = document.getElementById('barcodeInput');
     if(bcodeInput) bcodeInput.focus();
+    if (typeof initCoupons === 'function') initCoupons();
 });
 
 let rawItems = MA.getAll('items');
@@ -610,7 +630,7 @@ function updateBargainPrice(id, newPrice) {
     let val = parseFloat(newPrice);
     if(isNaN(val) || val < 0) val = item.price; // fallback to original if invalid
     item.bargainPrice = val;
-    recalc(); // Don't re-render entire cart to avoid losing focus on input
+    renderCart(); // Re-render to update the row cells
 }
 
 function addToCart(id) {
@@ -648,7 +668,7 @@ function renderCart() {
             <td style="text-align:center; color:red; cursor:pointer;" onclick="cart.splice(${index},1); renderCart();"><i class="fas fa-times"></i></td>
             <td>${c.barcode || c.sku}</td>
             <td>${c.name}</td>
-            <td style="padding:4px;"><input type="number" min="1" max="${c.stock||0}" value="${c.qty}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="if((parseInt(this.value)||1) > (c.stock||0)){ Swal2.fire('Stock Limit', 'Max available is ' + (${c.stock||0}), 'warning'); this.value=c.stock||0; } cart[${index}].qty=parseInt(this.value)||1; recalc();"></td>
+            <td style="padding:4px;"><input type="number" min="1" max="${c.stock||0}" value="${c.qty}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="updateCartQty(${index}, this.value)"></td>
             <td>₹${c.price.toFixed(2)}</td>
             <td style="padding:4px;"><input type="number" min="0" value="${c.bargainPrice.toFixed(2)}" style="width:100%; border:1px solid #ccc; text-align:center;" onchange="updateBargainPrice(${c.id}, this.value)"></td>
             <td style="color:#888;">${discountPct}%</td>
@@ -721,6 +741,32 @@ function addOtherChargeRow() {
 }
 
 window.recalc = function() {
+  const totalSaleTemp = cart.reduce((sum, item) => sum + ((item.bargainPrice || item.price || 0) * item.qty), 0);
+  if (appliedCoupon) {
+      if (appliedCoupon.minOrder && totalSaleTemp < appliedCoupon.minOrder) {
+          const code = appliedCoupon.code;
+          const minVal = appliedCoupon.minOrder;
+          appliedCoupon = null;
+          document.getElementById('couponCodeInput').value = '';
+          if (document.getElementById('couponSelect')) document.getElementById('couponSelect').value = '';
+          document.getElementById('removeCouponBtn').style.display = 'none';
+          document.getElementById('calcExtraDiscPct').value = 0;
+          document.getElementById('calcExtraDiscRs').value = 0;
+          extraDiscMode = 'rs';
+          document.getElementById('calcExtraDiscPct').removeAttribute('readonly');
+          document.getElementById('calcExtraDiscRs').removeAttribute('readonly');
+          
+          const msgEl = document.getElementById('couponMessage');
+          msgEl.style.display = 'block';
+          msgEl.style.color = '#dc3545';
+          msgEl.style.background = '#f8d7da';
+          msgEl.style.border = '1px solid #f5c6cb';
+          msgEl.textContent = `Coupon "${code}" removed: Total below min order ₹${minVal}`;
+      } else {
+          applyDiscountFromCoupon(appliedCoupon, totalSaleTemp);
+      }
+  }
+
   const params = {
       cart: cart,
       extraDiscMode: extraDiscMode,
@@ -857,7 +903,6 @@ function executeSale() {
     }
 
     pendingSaleRec = {
-        id: MA.nextId(MA.getAll('sales')),
         billNo: saleNo,
         date: MA.today(),
         time: new Date().toTimeString().slice(0,5),
@@ -871,19 +916,42 @@ function executeSale() {
         status: 'completed'
     };
 
-    // Deduct Stock
-    let allItems = MA.getAll('items');
-    cart.forEach(c => {
-        let idx = allItems.findIndex(x => x.id === c.id);
-        if(idx !== -1) {
-            allItems[idx].stock = (allItems[idx].stock || 0) - c.qty;
+    // Deduct Stock and Save Sale via Server
+    try {
+        const savedSale = MA.upsert('sales', pendingSaleRec);
+        pendingSaleRec.id = savedSale.id;
+    } catch(e) {
+        Swal2.fire('Error completing sale', e.message, 'error');
+        return;
+    }
+
+    // Update Coupon stats if a coupon was used
+    if (appliedCoupon) {
+        try {
+            let couponsList = MA.getAll('coupons');
+            let idx = couponsList.findIndex(c => c.code === appliedCoupon.code);
+            if (idx !== -1) {
+                couponsList[idx].used = (couponsList[idx].used || 0) + 1;
+                const totalSale = cart.reduce((sum, item) => sum + ((item.bargainPrice || item.price || 0) * item.qty), 0);
+                let discAmt = 0;
+                if (appliedCoupon.type === 'Percentage') {
+                    discAmt = (totalSale * appliedCoupon.value) / 100;
+                    if (appliedCoupon.maxDisc && discAmt > appliedCoupon.maxDisc) {
+                        discAmt = appliedCoupon.maxDisc;
+                    }
+                } else {
+                    discAmt = appliedCoupon.value;
+                    if (appliedCoupon.maxDisc && discAmt > appliedCoupon.maxDisc) {
+                        discAmt = appliedCoupon.maxDisc;
+                    }
+                }
+                couponsList[idx].usedAmount = (couponsList[idx].usedAmount || 0) + discAmt;
+                MA.set('coupons', couponsList);
+            }
+        } catch (e) {
+            console.error('Error updating coupon usage stats:', e);
         }
-    });
-    MA.set('items', allItems);
-    
-    let saved = MA.getAll('sales');
-    saved.push(pendingSaleRec);
-    MA.set('sales', saved);
+    }
 
     const gstAmountForPrint = parseFloat(document.getElementById('calcGst').value) || 0;
     const ocTotal = parseFloat(document.getElementById('calcOcTotal').value) || 0;
@@ -957,11 +1025,198 @@ function executeSale() {
 
 window.printReceipt = async function() {
     try {
+        // Set printer-width class on body for CSS @media print override
+        const profile = getActiveProfile();
+        if (profile.paperWidthMm <= 58) {
+            document.body.classList.add('printer-58mm');
+        } else {
+            document.body.classList.remove('printer-58mm');
+        }
         await window.PrinterAPI.printReceipt(document.getElementById('printReceiptArea').innerHTML);
     } catch (e) {
         Swal.fire('Printer Error', e.message, 'error');
     }
 };
+window.updateCartQty = function(index, value) {
+    let qty = parseInt(value) || 1;
+    let item = cart[index];
+    if (qty > item.stock) {
+        Swal2.fire('Stock Limit', 'Max available is ' + item.stock, 'warning');
+        qty = item.stock;
+    }
+    if (qty < 1) qty = 1;
+    cart[index].qty = qty;
+    renderCart();
+};
+
+let coupons = [];
+let appliedCoupon = null;
+
+function initCoupons() {
+    coupons = MA.getAll('coupons');
+    if (!coupons.length) {
+        // Seed initial coupons so they are ready to test
+        coupons = [
+            { id: 1, code: 'SAVE10', name: '10% Off Coupon', type: 'Percentage', value: 10, minOrder: 100, maxDisc: 200, limit: 100, used: 0, status: 'active', from: '2026-01-01', to: '2027-12-31', desc: '10% off on minimum order of ₹100' },
+            { id: 2, code: 'FLAT50', name: 'Flat ₹50 Coupon', type: 'Flat Discount', value: 50, minOrder: 500, maxDisc: 50, limit: 50, used: 0, status: 'active', from: '2026-01-01', to: '2027-12-31', desc: 'Flat ₹50 off on minimum order of ₹500' }
+        ];
+        MA.set('coupons', coupons);
+    }
+    
+    // Populate coupon select dropdown
+    const select = document.getElementById('couponSelect');
+    if (select) {
+        select.innerHTML = '<option value="">-- Or Select Active Coupon --</option>';
+        coupons.forEach(c => {
+            if (c.status === 'active') {
+                const opt = document.createElement('option');
+                opt.value = c.code;
+                opt.textContent = `${c.code} (${c.type === 'Percentage' ? c.value + '%' : '₹' + c.value} off)`;
+                select.appendChild(opt);
+            }
+        });
+    }
+}
+
+function applyDiscountFromCoupon(coupon, totalSale) {
+    if (coupon.type === 'Percentage') {
+        const calculatedDisc = (totalSale * coupon.value) / 100;
+        if (coupon.maxDisc && calculatedDisc > coupon.maxDisc) {
+            extraDiscMode = 'rs';
+            document.getElementById('calcExtraDiscRs').value = coupon.maxDisc.toFixed(2);
+            document.getElementById('calcExtraDiscPct').value = ((coupon.maxDisc / totalSale) * 100).toFixed(2);
+        } else {
+            extraDiscMode = 'pct';
+            document.getElementById('calcExtraDiscPct').value = coupon.value;
+        }
+    } else {
+        extraDiscMode = 'rs';
+        let val = coupon.value;
+        if (coupon.maxDisc && val > coupon.maxDisc) {
+            val = coupon.maxDisc;
+        }
+        document.getElementById('calcExtraDiscRs').value = val.toFixed(2);
+    }
+}
+
+window.applyTypedCoupon = function() {
+    const input = document.getElementById('couponCodeInput');
+    const code = input.value.trim().toUpperCase();
+    if (!code) {
+        Swal2.fire('Error', 'Please enter a coupon code.', 'error');
+        return;
+    }
+    const coupon = coupons.find(c => c.code.toUpperCase() === code);
+    if (!coupon) {
+        showCouponError(`Invalid coupon: "${code}"`);
+        return;
+    }
+    applyCoupon(coupon);
+};
+
+window.selectCoupon = function(code) {
+    if (!code) {
+        removeCoupon();
+        return;
+    }
+    const coupon = coupons.find(c => c.code === code);
+    if (coupon) {
+        document.getElementById('couponCodeInput').value = coupon.code;
+        applyCoupon(coupon);
+    }
+};
+
+window.removeCoupon = function(e) {
+    if (e) e.preventDefault();
+    applyCoupon(null);
+};
+
+function applyCoupon(coupon) {
+    const msgEl = document.getElementById('couponMessage');
+    const removeBtn = document.getElementById('removeCouponBtn');
+    
+    if (!coupon) {
+        appliedCoupon = null;
+        msgEl.style.display = 'none';
+        removeBtn.style.display = 'none';
+        document.getElementById('couponCodeInput').value = '';
+        if (document.getElementById('couponSelect')) document.getElementById('couponSelect').value = '';
+        document.getElementById('calcExtraDiscPct').value = 0;
+        document.getElementById('calcExtraDiscRs').value = 0;
+        extraDiscMode = 'rs';
+        document.getElementById('calcExtraDiscPct').removeAttribute('readonly');
+        document.getElementById('calcExtraDiscRs').removeAttribute('readonly');
+        recalc();
+        return;
+    }
+    
+    const totalSale = cart.reduce((sum, item) => sum + ((item.bargainPrice || item.price || 0) * item.qty), 0);
+    
+    if (coupon.status !== 'active') {
+        showCouponError(`Coupon "${coupon.code}" is not active.`);
+        return;
+    }
+    
+    if (coupon.minOrder && totalSale < coupon.minOrder) {
+        showCouponError(`Coupon "${coupon.code}" requires minimum order of ₹${coupon.minOrder}. Current: ₹${totalSale.toFixed(2)}`);
+        return;
+    }
+    
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (coupon.from && todayStr < coupon.from) {
+        showCouponError(`Coupon is only valid starting ${coupon.from}.`);
+        return;
+    }
+    if (coupon.to && todayStr > coupon.to) {
+        showCouponError(`Coupon expired on ${coupon.to}.`);
+        return;
+    }
+    
+    if (coupon.limit && coupon.used >= coupon.limit) {
+        showCouponError(`Coupon usage limit of ${coupon.limit} reached.`);
+        return;
+    }
+    
+    appliedCoupon = coupon;
+    
+    applyDiscountFromCoupon(coupon, totalSale);
+    
+    document.getElementById('calcExtraDiscPct').setAttribute('readonly', true);
+    document.getElementById('calcExtraDiscRs').setAttribute('readonly', true);
+    
+    removeBtn.style.display = 'inline';
+    if (document.getElementById('couponSelect')) document.getElementById('couponSelect').value = coupon.code;
+    
+    showCouponSuccess(`Coupon "${coupon.code}" applied! Save ${coupon.type === 'Percentage' ? coupon.value + '%' : '₹' + coupon.value}`);
+    recalc();
+}
+
+function showCouponError(msg) {
+    const msgEl = document.getElementById('couponMessage');
+    msgEl.style.display = 'block';
+    msgEl.style.color = '#721c24';
+    msgEl.style.background = '#f8d7da';
+    msgEl.style.border = '1px solid #f5c6cb';
+    msgEl.textContent = msg;
+    appliedCoupon = null;
+    document.getElementById('removeCouponBtn').style.display = 'none';
+    document.getElementById('calcExtraDiscPct').value = 0;
+    document.getElementById('calcExtraDiscRs').value = 0;
+    extraDiscMode = 'rs';
+    document.getElementById('calcExtraDiscPct').removeAttribute('readonly');
+    document.getElementById('calcExtraDiscRs').removeAttribute('readonly');
+    recalc();
+}
+
+function showCouponSuccess(msg) {
+    const msgEl = document.getElementById('couponMessage');
+    msgEl.style.display = 'block';
+    msgEl.style.color = '#155724';
+    msgEl.style.background = '#d4edda';
+    msgEl.style.border = '1px solid #c3e6cb';
+    msgEl.textContent = msg;
+}
+
 window.newSale = function() {
     location.reload();
 };
