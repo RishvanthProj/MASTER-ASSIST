@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
   <link rel="stylesheet" href="css/master-assist.css" />
   <style>
     .stock-bar { height:6px; border-radius:3px; background:#f0f0f5; overflow:hidden; margin-top:4px; }
@@ -24,6 +25,46 @@
     .tab-btn:hover:not(.active) { color:#444; }
     .tab-badge { display:inline-flex; align-items:center; justify-content:center; background:#f0f0f5; color:#666; font-size:10px; font-weight:700; border-radius:99px; padding:1px 7px; margin-left:5px; }
     .tab-btn.active .tab-badge { background:#ededff; color:#696cff; }
+
+    /* Select2 Overrides and Layout styling */
+    .select2-container--default .select2-selection--single {
+      height: 38px !important;
+      border: 1px solid #ced4da !important;
+      border-radius: 4px !important;
+      padding: 5px 12px !important;
+      font-size: 13px !important;
+      font-family: 'Public Sans', sans-serif !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 26px !important;
+      color: #495057 !important;
+      padding-left: 0 !important;
+    }
+    .select2-container {
+      width: 100% !important;
+    }
+    .select2-dropdown {
+      border: 1px solid #ced4da !important;
+      z-index: 10000 !important;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+      background-color: #696cff !important;
+    }
+    .nav-tabs .nav-link {
+      color: #888;
+      border-bottom: 2px solid transparent;
+    }
+    .nav-tabs .nav-link.active {
+      color: #696cff !important;
+      border-bottom-color: #696cff !important;
+      background: transparent !important;
+      border-top: none !important;
+      border-left: none !important;
+      border-right: none !important;
+    }
   </style>
 </head>
 <body>
@@ -224,54 +265,146 @@
 
 <!-- Add/Edit Item Modal -->
 <div class="ma-modal-overlay" id="itemModal">
-  <div class="ma-modal">
+  <div class="ma-modal" style="max-width: 1100px; width: 100%;">
     <div class="ma-modal-header">
       <h5 id="itemModalTitle"><i class="fas fa-plus" style="color:#696cff;margin-right:7px;"></i>Add Item</h5>
       <button class="ma-modal-close" id="itemModalClose">×</button>
     </div>
-    <div class="ma-modal-body">
+    <div class="ma-modal-body" style="background: #f8f9fa;">
       <form id="itemForm">
         <input type="hidden" id="editItemId" />
         <div class="row g-3">
-          <div class="col-6">
-            <label class="ma-label">SKU <span class="req">*</span></label>
-            <input type="text" class="ma-input" id="iSKU" placeholder="e.g. GRO-001" required />
+          
+          <!-- Left Panel: Basic Information -->
+          <div class="col-lg-8 col-md-12">
+            <div style="background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; height: 100%;">
+              <h6 style="font-weight: 700; margin-bottom: 20px; color: #495057; border-bottom: 1px solid #e9ecef; padding-bottom: 10px;">Basic Information</h6>
+              <div class="row g-3">
+                
+                <!-- Left Column inside Left Panel -->
+                <div class="col-md-7">
+                  <div class="mb-3">
+                    <label class="ma-label">Item Name <span class="req">*</span></label>
+                    <select class="ma-select" id="iName" style="width: 100%;"></select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Barcode</label>
+                    <input type="text" class="ma-input" id="iBarcode" placeholder="Scan or enter barcode" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Brand</label>
+                    <select class="ma-select" id="iBrand" style="width: 100%;"></select>
+                  </div>
+                  <div class="mb-3 flex-row gap-2" style="display: flex;">
+                    <div style="flex: 1;">
+                      <label class="ma-label">Size</label>
+                      <select class="ma-select" id="iSize" style="width: 100%;"></select>
+                    </div>
+                    <div style="flex: 1;">
+                      <label class="ma-label">Colour</label>
+                      <select class="ma-select" id="iColour" style="width: 100%;"></select>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Item Code (SKU)</label>
+                    <select class="ma-select" id="iSKU" style="width: 100%;"></select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Unit-1</label>
+                    <div style="position: relative;">
+                      <select class="ma-select" id="iUnit" style="width: 100%;"></select>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">HSN/SAC</label>
+                    <select class="ma-select" id="iHSN" style="width: 100%;"></select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Tax Category</label>
+                    <select class="ma-select" id="iTaxCategory" style="width: 100%;"></select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Tax Based On</label>
+                    <select class="ma-select" id="iTaxBasedOn" style="width: 100%;">
+                      <option value="PRICE">PRICE</option>
+                      <option value="QUANTITY">QUANTITY</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <!-- Right Column inside Left Panel -->
+                <div class="col-md-5">
+                  <div class="mb-3">
+                    <label class="ma-label">Type</label>
+                    <select class="ma-select" id="iType" style="width: 100%;">
+                      <option value="Goods">Goods</option>
+                      <option value="Service">Service</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Purchase Rate (₹)</label>
+                    <input type="number" class="ma-input" id="iPurchase" placeholder="0.00" step="0.01" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">MRP (₹)</label>
+                    <input type="number" class="ma-input" id="iMRP" placeholder="0.00" step="0.01" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Rate (₹) <span class="req">*</span></label>
+                    <input type="number" class="ma-input" id="iRate" placeholder="0.00" step="0.01" required />
+                  </div>
+                </div>
+                
+              </div>
+            </div>
           </div>
-          <div class="col-6">
-            <label class="ma-label">Item Name <span class="req">*</span></label>
-            <input type="text" class="ma-input" id="iName" placeholder="Product name" required />
+          
+          <!-- Right Panel: Advance Information -->
+          <div class="col-lg-4 col-md-12">
+            <div style="background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; height: 100%; position: relative;">
+              <button type="button" class="btn btn-link btn-sm" id="btnRefreshAdv" style="position: absolute; top: 18px; right: 18px; color: #696cff; text-decoration: none;" title="Refresh">
+                <i class="fas fa-sync-alt"></i> Refresh
+              </button>
+              <h6 style="font-weight: 700; margin-bottom: 20px; color: #495057; border-bottom: 1px solid #e9ecef; padding-bottom: 10px;">Advance Information</h6>
+              
+              <!-- Tab Navigation -->
+              <ul class="nav nav-tabs mb-3" id="advTab" role="tablist">
+                <li class="nav-item" role="presentation" style="flex: 1; text-align: center;">
+                  <button class="nav-link active w-100" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stock-pane" type="button" role="tab" style="font-size: 13px; font-weight: 600; padding: 8px;">Current Stock</button>
+                </li>
+                <li class="nav-item" role="presentation" style="flex: 1; text-align: center;">
+                  <button class="nav-link w-100" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-pane" type="button" role="tab" style="font-size: 13px; font-weight: 600; padding: 8px;">Other Info</button>
+                </li>
+              </ul>
+              
+              <!-- Tab Content -->
+              <div class="tab-content" id="advTabContent">
+                <!-- Current Stock Tab Pane -->
+                <div class="tab-pane fade show active" id="stock-pane" role="tabpanel">
+                  <div class="mb-3">
+                    <label class="ma-label">Current Stock</label>
+                    <input type="number" class="ma-input" id="iStock" value="0" />
+                  </div>
+                </div>
+                
+                <!-- Other Info Tab Pane -->
+                <div class="tab-pane fade" id="other-pane" role="tabpanel">
+                  <div class="mb-3">
+                    <label class="ma-label">Min Stock Level</label>
+                    <input type="number" class="ma-input" id="iMinStock" value="10" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="ma-label">Warehouse</label>
+                    <select class="ma-select" id="iWarehouse" style="width: 100%;">
+                      <option id="_wh1"></option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
           </div>
-          <div class="col-6">
-            <label class="ma-label">Category</label>
-            <select class="ma-select" id="iCat">
-              <option>Groceries</option><option>Beverages</option><option>Dairy</option>
-              <option>Snacks</option><option>Personal Care</option><option>Cleaning</option>
-            </select>
-          </div>
-          <div class="col-6">
-            <label class="ma-label">Unit</label>
-            <select class="ma-select" id="iUnit">
-              <option>Pcs</option><option>Kg</option><option>Ltr</option><option>Box</option><option>Pack</option>
-            </select>
-          </div>
-          <div class="col-4">
-            <label class="ma-label">Rate (₹)</label>
-            <input type="number" class="ma-input" id="iRate" placeholder="0.00" />
-          </div>
-          <div class="col-4">
-            <label class="ma-label">Current Stock</label>
-            <input type="number" class="ma-input" id="iStock" placeholder="0" />
-          </div>
-          <div class="col-4">
-            <label class="ma-label">Min Stock Level</label>
-            <input type="number" class="ma-input" id="iMinStock" placeholder="10" />
-          </div>
-          <div class="col-12">
-            <label class="ma-label">Warehouse</label>
-            <select class="ma-select" id="iWarehouse">
-              <option id="_wh1"></option>
-            </select>
-          </div>
+          
         </div>
       </form>
     </div>
@@ -284,12 +417,106 @@
 
 <script src="js/store.js"></script>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
 <script>
   var items = MA.getAll('items');
 
   var filtered=items.slice(), currentTab='all', currentPage=1, rowsPerPage=10;
+
+  // Initialize Select2 helper functions and dropdown selections
+  function setSelect2Value(selector, value) {
+      const el = $(selector);
+      if (value) {
+          if (el.find(`option[value="${value}"]`).length === 0) {
+              el.append(new Option(value, value, true, true));
+          }
+          el.val(value).trigger('change');
+      } else {
+          el.val(null).trigger('change');
+      }
+  }
+
+  function initSelect2Dropdowns() {
+      const names = [...new Set(items.map(i => i.name))].filter(Boolean);
+      const brands = [...new Set(items.map(i => i.brand))].filter(Boolean);
+      ['Local', 'Samsung', 'Xiaomi', 'Unilever', 'P&G'].forEach(b => {
+          if (!brands.includes(b)) brands.push(b);
+      });
+
+      const sizes = [...new Set(items.map(i => i.size))].filter(Boolean);
+      ['S', 'M', 'L', 'XL', 'Free Size', '32', '34', '36', '38', '40'].forEach(s => {
+          if (!sizes.includes(s)) sizes.push(s);
+      });
+
+      const colours = [...new Set(items.map(i => i.colour || i.color))].filter(Boolean);
+      ['Red', 'Blue', 'Green', 'Black', 'White', 'Gray', 'Yellow'].forEach(c => {
+          if (!colours.includes(c)) colours.push(c);
+      });
+
+      const skus = [...new Set(items.map(i => i.sku))].filter(Boolean);
+      const units = [...new Set(items.map(i => i.unit))].filter(Boolean);
+      ['Pcs', 'Kg', 'Ltr', 'Box', 'Pack', 'Btls', 'Bags'].forEach(u => {
+          if (!units.includes(u)) units.push(u);
+      });
+
+      const hsns = [...new Set(items.map(i => i.hsn || i.hsnSac))].filter(Boolean);
+      const taxCats = [...new Set(items.map(i => i.taxCategory || (i.gst ? `GST ${i.gst}%` : '')))].filter(Boolean);
+      ['GST 0%', 'GST 5%', 'GST 12%', 'GST 18%', 'GST 28%'].forEach(t => {
+          if (!taxCats.includes(t)) taxCats.push(t);
+      });
+      
+      const categories = [...new Set(items.map(i => i.cat))].filter(Boolean);
+      ['Groceries', 'Beverages', 'Dairy', 'Snacks', 'Personal Care', 'Cleaning'].forEach(c => {
+          if (!categories.includes(c)) categories.push(c);
+      });
+
+      const populate = (id, list, placeholder) => {
+          const el = $(id);
+          el.empty();
+          el.append(`<option value=""></option>`);
+          list.forEach(val => {
+              el.append(`<option value="${val}">${val}</option>`);
+          });
+          el.select2({
+              placeholder: placeholder,
+              tags: true,
+              allowClear: true,
+              dropdownParent: $('#itemModal')
+          });
+      };
+
+      populate('#iName', names, 'Select Item Name');
+      populate('#iBrand', brands, 'Select Brand');
+      populate('#iSize', sizes, 'Select Size');
+      populate('#iColour', colours, 'Select Colour');
+      populate('#iSKU', skus, 'Select Item Code');
+      populate('#iHSN', hsns, 'Select HSN/SAC');
+      populate('#iTaxCategory', taxCats, 'Select Tax Category');
+      populate('#iCat', categories, 'Select Category');
+
+      const unitEl = $('#iUnit');
+      unitEl.empty();
+      units.forEach(u => {
+          unitEl.append(`<option value="${u}">${u}</option>`);
+      });
+      unitEl.select2({
+          placeholder: 'Select Unit',
+          allowClear: true,
+          dropdownParent: $('#itemModal')
+      });
+      
+      if (units.includes('Pcs')) {
+          unitEl.val('Pcs').trigger('change');
+      } else if (units.length) {
+          unitEl.val(units[0]).trigger('change');
+      }
+  }
+
+  $(document).ready(function() {
+      initSelect2Dropdowns();
+  });
 
   /* ---- Stats ---- */
   function updateStats(){
@@ -408,14 +635,27 @@
     if(eBtn){
       var it=items.find(function(x){return x.id===parseInt(eBtn.dataset.id);});
       document.getElementById('editItemId').value=it.id;
-      document.getElementById('iSKU').value=it.sku;
-      document.getElementById('iName').value=it.name;
-      document.getElementById('iCat').value=it.cat;
-      document.getElementById('iUnit').value=it.unit;
+      
+      setSelect2Value('#iName', it.name);
+      document.getElementById('iBarcode').value=it.barcode||'';
+      setSelect2Value('#iBrand', it.brand||'');
+      setSelect2Value('#iSize', it.size||'');
+      setSelect2Value('#iColour', it.colour||it.color||'');
+      setSelect2Value('#iSKU', it.sku||'');
+      setSelect2Value('#iUnit', it.unit||'Pcs');
+      setSelect2Value('#iHSN', it.hsn||it.hsnSac||'');
+      setSelect2Value('#iTaxCategory', it.taxCategory||(it.gst ? 'GST '+it.gst+'%' : 'GST 18%'));
+      document.getElementById('iTaxBasedOn').value=it.taxBasedOn||'PRICE';
+      setSelect2Value('#iCat', it.cat||'');
+      
+      document.getElementById('iType').value=it.type||'Goods';
+      document.getElementById('iPurchase').value=it.purchase||0;
+      document.getElementById('iMRP').value=it.mrp||0;
       document.getElementById('iRate').value=it.rate||it.sale||0;
-      document.getElementById('iStock').value=it.stock;
-      document.getElementById('iMinStock').value=it.minStock;
+      document.getElementById('iStock').value=it.stock||0;
+      document.getElementById('iMinStock').value=it.minStock||0;
       document.getElementById('iWarehouse').value=it.warehouse||'';
+      
       document.getElementById('itemModalTitle').innerHTML='<i class="fas fa-edit" style="color:#696cff;margin-right:7px;"></i>Edit Item';
       document.getElementById('itemModal').classList.add('open');
     }
@@ -461,50 +701,116 @@
   document.getElementById('addItemBtn').addEventListener('click',function(){
     document.getElementById('editItemId').value='';
     document.getElementById('itemForm').reset();
+    
+    // Clear Select2 values
+    $('#iName').val(null).trigger('change');
+    $('#iBrand').val(null).trigger('change');
+    $('#iSize').val(null).trigger('change');
+    $('#iColour').val(null).trigger('change');
+    $('#iSKU').val(null).trigger('change');
+    $('#iHSN').val(null).trigger('change');
+    $('#iTaxCategory').val(null).trigger('change');
+    $('#iCat').val(null).trigger('change');
+    
+    // Set default Unit-1
+    const units = [...new Set(items.map(i => i.unit))].filter(Boolean);
+    if (units.includes('Pcs')) {
+        $('#iUnit').val('Pcs').trigger('change');
+    } else if (units.length) {
+        $('#iUnit').val(units[0]).trigger('change');
+    } else {
+        $('#iUnit').val(null).trigger('change');
+    }
+    
+    // Reset active tab to stock tab
+    var triggerEl = document.querySelector('#stock-tab');
+    if (triggerEl) bootstrap.Tab.getOrCreateInstance(triggerEl).show();
+
     document.getElementById('itemModalTitle').innerHTML='<i class="fas fa-plus" style="color:#696cff;margin-right:7px;"></i>Add Item';
     document.getElementById('itemModal').classList.add('open');
   });
 
   document.getElementById('itemModalSave').addEventListener('click',function(){
-    var name=document.getElementById('iName').value.trim();
-    var sku=document.getElementById('iSKU').value.trim();
-    if(!name||!sku){showAlert('error','Name and SKU are required.');return;}
+    var name = ($('#iName').val() || '').trim();
+    var sku = ($('#iSKU').val() || '').trim();
+    if(!name||!sku){showAlert('error','Name and SKU/Item Code are required.');return;}
+    
     var editId=document.getElementById('editItemId').value;
     if(editId){
       var it=items.find(function(x){return x.id===parseInt(editId);});
       if(it){
         it.sku=sku;
         it.name=name;
-        it.cat=document.getElementById('iCat').value;
-        it.unit=document.getElementById('iUnit').value;
+        it.barcode=document.getElementById('iBarcode').value.trim();
+        it.brand=$('#iBrand').val() || '';
+        it.size=$('#iSize').val() || '';
+        it.colour=$('#iColour').val() || '';
+        it.unit=$('#iUnit').val() || 'Pcs';
+        it.hsn=$('#iHSN').val() || '';
+        
+        const taxCat = $('#iTaxCategory').val() || '';
+        it.taxCategory=taxCat;
+        const gstMatch = taxCat.match(/\d+/);
+        it.gst=gstMatch ? parseFloat(gstMatch[0]) : 0;
+        
+        it.taxBasedOn=document.getElementById('iTaxBasedOn').value;
+        it.type=document.getElementById('iType').value;
+        it.purchase=parseFloat(document.getElementById('iPurchase').value)||0;
+        it.mrp=parseFloat(document.getElementById('iMRP').value)||0;
         it.sale=parseFloat(document.getElementById('iRate').value)||0;
         it.rate=it.sale;
         it.stock=parseInt(document.getElementById('iStock').value)||0;
         it.minStock=parseInt(document.getElementById('iMinStock').value)||0;
         it.warehouse=document.getElementById('iWarehouse').value;
+        it.cat=$('#iCat').val() || '';
+        
         MA.upsert('items', it);
       }
       showAlert('success',name+' updated.');
     } else {
+      const taxCat = $('#iTaxCategory').val() || '';
+      const gstMatch = taxCat.match(/\d+/);
+      const gstVal = gstMatch ? parseFloat(gstMatch[0]) : 0;
+      
       var newItem = {
         sku: sku,
         name: name,
-        cat: document.getElementById('iCat').value,
-        unit: document.getElementById('iUnit').value,
+        barcode: document.getElementById('iBarcode').value.trim(),
+        brand: $('#iBrand').val() || '',
+        size: $('#iSize').val() || '',
+        colour: $('#iColour').val() || '',
+        unit: $('#iUnit').val() || 'Pcs',
+        hsn: $('#iHSN').val() || '',
+        taxCategory: taxCat,
+        gst: gstVal,
+        taxBasedOn: document.getElementById('iTaxBasedOn').value,
+        type: document.getElementById('iType').value,
+        purchase: parseFloat(document.getElementById('iPurchase').value)||0,
+        mrp: parseFloat(document.getElementById('iMRP').value)||0,
         sale: parseFloat(document.getElementById('iRate').value)||0,
         rate: parseFloat(document.getElementById('iRate').value)||0,
         stock: parseInt(document.getElementById('iStock').value)||0,
         minStock: parseInt(document.getElementById('iMinStock').value)||0,
         warehouse: document.getElementById('iWarehouse').value,
-        purchase: (parseFloat(document.getElementById('iRate').value)||0) * 0.8,
-        mrp: parseFloat(document.getElementById('iRate').value)||0
+        cat: $('#iCat').val() || '',
+        status: 'active'
       };
+      
       MA.upsert('items', newItem);
       showAlert('success',name+' added.');
     }
     items=MA.getAll('items');
     document.getElementById('itemModal').classList.remove('open');
     applyFilters();
+  });
+
+  /* ---- Refresh Advance Info ---- */
+  document.getElementById('btnRefreshAdv').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('iStock').value = 0;
+      document.getElementById('iMinStock').value = 10;
+      initSelect2Dropdowns();
+      showAlert('success', 'Advance information inputs refreshed.');
   });
 
   /* ---- Modal close ---- */
