@@ -370,6 +370,15 @@
               <div><div class="setting-label">Daily Sales Summary</div><div class="setting-desc">Receive EOD sales report via email</div></div>
               <label class="toggle-wrap"><input type="checkbox" checked /><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
             </div>
+            <div class="setting-row">
+              <div>
+                <div class="setting-label">Reminder Lead Time (Days)</div>
+                <div class="setting-desc">Number of days before the due date to start reminding</div>
+              </div>
+              <div style="width:100px;">
+                <input type="number" class="ma-input" id="sReminderDays" value="7" min="1" max="30" style="height:32px;font-size:13px;" />
+              </div>
+            </div>
             <div class="section-title" style="margin-top:18px;">Notification Email</div>
             <div class="row g-3">
               <div class="col-md-6">
@@ -697,6 +706,12 @@
         pan: document.getElementById('sPAN').value
       });
     }
+    if(name === 'Notifications') {
+      var settings = MA.getAll('settings') || {};
+      if (!settings.notifications) settings.notifications = {};
+      settings.notifications.paymentReminderDays = parseInt(document.getElementById('sReminderDays').value) || 7;
+      MA.set('settings', settings);
+    }
     Swal.fire({icon:'success',title:'Saved!',text:name+' settings saved.',timer:1800,timerProgressBar:true,showConfirmButton:false});
   }
 
@@ -824,6 +839,15 @@
   var ef=function(id,v){var e=document.getElementById(id);if(e)e.value=v||'';};
   ef('sCompanyName',c.name);ef('sTagline',c.tagline);ef('sEmail',c.email);
   ef('sPhone',c.phone);ef('sAddress',c.address);ef('sGSTIN',c.gstin);ef('sPAN',c.pan);
+
+  // Load paymentReminderDays settings
+  var settings = MA.getAll('settings') || {};
+  if (!settings.notifications) settings.notifications = {};
+  if (settings.notifications.paymentReminderDays === undefined) {
+      settings.notifications.paymentReminderDays = 7;
+  }
+  var remInput = document.getElementById('sReminderDays');
+  if (remInput) remInput.value = settings.notifications.paymentReminderDays;
 })();
 
 

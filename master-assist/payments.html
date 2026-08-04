@@ -321,6 +321,17 @@ function savePayment(){
   if(eid){const idx=payments.findIndex(p=>p.id===parseInt(eid));payments[idx]={...payments[idx],...data};}
   else{payments.push({id:nextId++,no:'PAY-'+String(nextNo++).padStart(4,'0'),...data});}
   MA.set('payments',payments);
+
+  // Safeguard: explicitly mark bill status as Paid in localStorage
+  if (data.bill && data.status === 'completed') {
+    var bills = MA.getAll('bills') || [];
+    var matchedBill = bills.find(function(b) { return b.billNo === data.bill; });
+    if (matchedBill) {
+      matchedBill.paymentStatus = 'Paid';
+      MA.set('bills', bills);
+    }
+  }
+
   bootstrap.Modal.getInstance(document.getElementById('payModal')).hide();
   applyFilters();
 }

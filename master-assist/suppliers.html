@@ -369,6 +369,30 @@ function saveSupplier(){
 function viewSupplier(id){
   viewingId=id;
   const s=suppliers.find(x=>x.id===id);
+  
+  // Calculate outstanding bills list
+  const allBills = MA.getAll('bills') || [];
+  const paymentsList = MA.getAll('payments') || [];
+  const supplierBills = allBills.filter(b => b.party.toLowerCase() === s.name.toLowerCase());
+  const unpaidBills = supplierBills.filter(b => {
+    return !paymentsList.some(p => p.bill === b.billNo && p.status === 'completed');
+  });
+  const totalPayable = unpaidBills.reduce((a, b) => a + b.amount, 0);
+
+  // Generate table rows for outstanding bills
+  let billsTableHtml = '';
+  if (!unpaidBills.length) {
+    billsTableHtml = '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:12px;">No outstanding bills</td></tr>';
+  } else {
+    billsTableHtml = unpaidBills.map(b => `
+      <tr>
+        <td style="padding:6px 12px;"><code>${b.billNo}</code></td>
+        <td style="padding:6px 12px;">${b.dueDate || '—'}</td>
+        <td style="padding:6px 12px;font-weight:600;">${fmtAmt(b.amount)}</td>
+      </tr>
+    `).join('');
+  }
+
   document.getElementById('viewBody').innerHTML=`
     <div class="row g-3">
       <div class="col-12" style="display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:1px solid #f0f0f5;">
@@ -382,8 +406,28 @@ function viewSupplier(id){
       <div class="col-md-6"><div style="font-size:11px;color:#888;">CITY</div><div style="font-weight:500;">${s.city}</div></div>
       <div class="col-12"><div style="font-size:11px;color:#888;">ADDRESS</div><div style="font-weight:500;">${s.address||'—'}</div></div>
       <div class="col-md-4"><div style="background:#f8f8fd;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#696cff;">${s.pos}</div><div style="font-size:11px;color:#888;">Purchase Orders</div></div></div>
-      <div class="col-md-4"><div style="background:#f8f8fd;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#f57c00;">${fmtAmt(s.balance)}</div><div style="font-size:11px;color:#888;">Outstanding</div></div></div>
+      <div class="col-md-4"><div style="background:#f8f8fd;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#f57c00;">${fmtAmt(totalPayable)}</div><div style="font-size:11px;color:#888;">Outstanding</div></div></div>
       <div class="col-md-4"><div style="background:#f8f8fd;border-radius:8px;padding:12px;text-align:center;"><div style="font-size:20px;font-weight:700;color:#28a745;">${s.category}</div><div style="font-size:11px;color:#888;">Category</div></div></div>
+      
+      <!-- Outstanding Bills Detail -->
+      <div class="col-12" style="margin-top: 10px;">
+        <div style="font-size:11px;color:#888;margin-bottom:6px;font-weight:600;">OUTSTANDING BILLS DETAIL</div>
+        <div style="max-height:180px; overflow-y:auto; border: 1px solid #e8e8f0; border-radius: 8px;">
+          <table class="ma-table" style="font-size:12px; margin-bottom:0; width:100%;">
+            <thead>
+              <tr style="background:#f8f9fa;">
+                <th style="padding:6px 12px;">Bill No</th>
+                <th style="padding:6px 12px;">Due Date</th>
+                <th style="padding:6px 12px;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${billsTableHtml}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       ${s.notes?`<div class="col-12"><div style="font-size:11px;color:#888;">NOTES</div><div style="background:#fffbec;border-radius:6px;padding:8px 12px;font-size:13px;">${s.notes}</div></div>`:''}
     </div>`;
   document.getElementById('editFromView').onclick=()=>editSupplier(id);

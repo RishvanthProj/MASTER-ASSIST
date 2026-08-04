@@ -221,6 +221,8 @@
             <th>Type</th>
             <th>Amount <i class="fas fa-sort" style="color:#ccc;font-size:10px;cursor:pointer;" id="sortAmount"></i></th>
             <th>Bill Date <i class="fas fa-sort" style="color:#ccc;font-size:10px;cursor:pointer;" id="sortDate"></i></th>
+            <th>Payment Due Date</th>
+            <th>Payment Status</th>
             <th>Uploaded</th>
             <th>File</th>
             <th>Status</th>
@@ -290,6 +292,27 @@
     var m={approved:'badge-success',pending:'badge-pending',rejected:'badge-error'};
     return '<span class="status-badge '+(m[s]||'badge-info')+'" style="text-transform:capitalize;">'+s+'</span>';
   }
+
+  function getBillPaymentStatus(b) {
+    var paymentsList = MA.getAll('payments') || [];
+    var isPaid = paymentsList.some(function(p) {
+      return p.bill === b.billNo && p.status === 'completed';
+    });
+    if (isPaid) return { status: 'Paid', class: 'badge-success' };
+    if (!b.dueDate) return { status: 'Unpaid', class: 'badge-info' };
+
+    var todayStr = new Date().toISOString().split('T')[0];
+    if (b.dueDate < todayStr) {
+      return { status: 'Overdue', class: 'badge-error' };
+    }
+    var todayMs = new Date(todayStr).getTime();
+    var dueMs = new Date(b.dueDate).getTime();
+    var diffDays = Math.ceil((dueMs - todayMs) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 7) {
+      return { status: 'Due Soon', class: 'badge-pending' };
+    }
+    return { status: 'Unpaid', class: 'badge-success' };
+  }
   function updateTabCounts(){
     document.getElementById('tabCountAll').textContent=allBills.length;
     document.getElementById('tabCountPending').textContent=allBills.filter(function(b){return b.status==='pending';}).length;
@@ -334,10 +357,11 @@ function applyFilters() {
     var html  = '';
 
     if (!page.length) {
-      html = '<tr><td colspan="12" style="text-align:center;padding:36px;color:#aaa;"><i class="fas fa-inbox" style="font-size:36px;display:block;margin-bottom:12px;"></i>No bills found</td></tr>';
+      html = '<tr><td colspan="14" style="text-align:center;padding:36px;color:#aaa;"><i class="fas fa-inbox" style="font-size:36px;display:block;margin-bottom:12px;"></i>No bills found</td></tr>';
     } else {
       page.forEach(function(b, i) {
         var chk = selectedIds.has(b.id) ? 'checked' : '';
+        var pStatus = getBillPaymentStatus(b);
         html += '<tr data-id="'+b.id+'">' +
           '<td><input type="checkbox" class="row-check" data-id="'+b.id+'" '+chk+' style="width:15px;height:15px;"/></td>' +
           '<td style="color:#aaa;font-size:12px;">'+(start+i+1)+'</td>'+
@@ -347,6 +371,8 @@ function applyFilters() {
           '<td style="font-size:12px;color:#666;">'+b.type+'</td>'+
           '<td class="amount-cell">'+fmtAmt(b.amount)+'</td>'+
           '<td>'+b.date+'</td>'+
+          '<td>'+(b.dueDate || '—')+'</td>'+
+          '<td><span class="status-badge '+pStatus.class+'">'+pStatus.status+'</span></td>'+
           '<td style="font-size:12px;color:#888;">'+b.uploaded+'</td>'+
           '<td style="text-align:center;">'+fileIcon(b.file)+'</td>'+
           '<td>'+statusBadge(b.status)+'</td>'+

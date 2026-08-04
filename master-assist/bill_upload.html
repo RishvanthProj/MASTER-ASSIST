@@ -512,15 +512,19 @@
                 <input type="text" class="ma-input" id="partyName" name="party_name" placeholder="Enter supplier / party name" required />
               </div>
 
-              <!-- Bill Number & Date side by side -->
+              <!-- Bill Number, Date & Due Date -->
               <div class="row g-3 mb-3">
-                <div class="col-7">
+                <div class="col-4">
                   <label class="ma-label">Bill No. <span class="req">*</span></label>
                   <input type="text" class="ma-input" id="billNo" name="bill_no" placeholder="e.g. INV-0001" required />
                 </div>
-                <div class="col-5">
+                <div class="col-4">
                   <label class="ma-label">Bill Date <span class="req">*</span></label>
                   <input type="date" class="ma-input" id="billDate" name="bill_date" required />
+                </div>
+                <div class="col-4">
+                  <label class="ma-label">Payment Due Date</label>
+                  <input type="date" class="ma-input" id="dueDate" name="due_date" />
                 </div>
               </div>
 
@@ -628,6 +632,8 @@
                   <th>POS</th>
                   <th>Amount</th>
                   <th>Date</th>
+                  <th>Payment Due Date</th>
+                  <th>Payment Status</th>
                   <th>File</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -695,6 +701,27 @@
       return '₹' + n.toLocaleString('en-IN');
     }
 
+    function getBillPaymentStatus(b) {
+      var paymentsList = MA.getAll('payments') || [];
+      var isPaid = paymentsList.some(function(p) {
+        return p.bill === b.billNo && p.status === 'completed';
+      });
+      if (isPaid) return { status: 'Paid', class: 'badge-success' };
+      if (!b.dueDate) return { status: 'Unpaid', class: 'badge-info' };
+
+      var todayStr = new Date().toISOString().split('T')[0];
+      if (b.dueDate < todayStr) {
+        return { status: 'Overdue', class: 'badge-error' };
+      }
+      var todayMs = new Date(todayStr).getTime();
+      var dueMs = new Date(b.dueDate).getTime();
+      var diffDays = Math.ceil((dueMs - todayMs) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 7) {
+        return { status: 'Due Soon', class: 'badge-pending' };
+      }
+      return { status: 'Unpaid', class: 'badge-success' };
+    }
+
     function statusBadge(s) {
       var map = {
         approved:   'badge-success',
@@ -720,9 +747,10 @@
       var html  = '';
 
       if (page.length === 0) {
-        html = '<tr><td colspan="9" style="text-align:center;padding:32px;color:#aaa;"><i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>No bills found</td></tr>';
+        html = '<tr><td colspan="11" style="text-align:center;padding:32px;color:#aaa;"><i class="fas fa-inbox" style="font-size:32px;display:block;margin-bottom:10px;"></i>No bills found</td></tr>';
       } else {
         page.forEach(function(b, i) {
+          var pStatus = getBillPaymentStatus(b);
           html += '<tr data-id="' + b.id + '">' +
             '<td>' + (start + i + 1) + '</td>' +
             '<td><strong>' + b.billNo + '</strong></td>' +
@@ -730,6 +758,8 @@
             '<td><span style="background:#f0f0f5;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;">' + b.pos + '</span></td>' +
             '<td>' + formatAmount(b.amount) + '</td>' +
             '<td>' + b.date + '</td>' +
+            '<td>' + (b.dueDate || '—') + '</td>' +
+            '<td><span class="status-badge ' + pStatus.class + '">' + pStatus.status + '</span></td>' +
             '<td style="text-align:center;">' + fileIcon(b.file) + '</td>' +
             '<td>' + statusBadge(b.status) + '</td>' +
             '<td>' +
@@ -867,9 +897,14 @@
       var billNo  = document.getElementById('billNo').value.trim();
       var billDate= document.getElementById('billDate').value;
       var amount  = document.getElementById('billAmount').value;
+      var dueDate = document.getElementById('dueDate').value;
 
       if (!center || !pos || !party || !billNo || !billDate || !amount) {
         showAlert('error', 'Please fill in all required fields.');
+        return;
+      }
+      if (dueDate && dueDate < billDate) {
+        showAlert('error', 'Payment Due Date must be on or after Bill Date.');
         return;
       }
       if (selectedFiles.length === 0) {
@@ -909,6 +944,7 @@
           pos:    posText,
           amount: parseFloat(amount),
           date:   billDate,
+          dueDate: dueDate || null,
           status: 'pending',
           file:   selectedFiles[0].name
         };

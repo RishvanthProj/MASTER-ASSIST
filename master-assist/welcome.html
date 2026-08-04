@@ -952,6 +952,28 @@
       </div>
     </div>
 
+    <!-- Bills Payment Due Status Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-6 col-12">
+        <div class="stat-card" style="cursor: pointer; border-left: 4px solid #ffab00;" onclick="openFilteredBillsModal('dueSoon')">
+          <div class="stat-icon orange" style="background:#fff3e0; color:#ffab00; width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="dsBillsDueSoon">0</div>
+            <div class="stat-label" style="font-weight:600;">Bills Due Within 7 Days</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 col-12">
+        <div class="stat-card" style="cursor: pointer; border-left: 4px solid #ff3e1d;" onclick="openFilteredBillsModal('overdue')">
+          <div class="stat-icon red" style="background:#ffe0db; color:#ff3e1d; width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fas fa-ban"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="dsBillsOverdue">0</div>
+            <div class="stat-label" style="font-weight:600;">Bills Overdue & Unpaid</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Access -->
     <div class="ma-card mb-4">
       <div class="ma-card-header">
@@ -1032,8 +1054,22 @@
         </div>
       </div>
 
-      <!-- Activity Feed -->
+      <!-- Activity Feed & Upcoming Payments -->
       <div class="col-lg-4">
+        
+        <!-- Upcoming Payments -->
+        <div class="ma-card mb-4">
+          <div class="ma-card-header">
+            <h5><i class="fas fa-money-bill-wave" style="color:#7957fb;margin-right:7px;"></i>Upcoming Payments</h5>
+          </div>
+          <div class="ma-card-body" style="max-height:360px; overflow-y:auto; padding: 14px 18px;">
+            <div id="upcomingPaymentsFeed">
+              <div style="font-size:12px;color:#aaa;text-align:center;padding:20px;">No upcoming payments</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Feed -->
         <div class="ma-card">
           <div class="ma-card-header">
             <h5><i class="fas fa-history" style="color:#7957fb;margin-right:7px;"></i>Recent Activity</h5>
@@ -1087,8 +1123,35 @@
 
     </div>
 
-  </main>
-
+  <!-- Filtered Bills Modal -->
+  <div class="ma-modal-overlay" id="filteredBillsModal" style="display: none; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 9999; padding: 16px;">
+    <div class="ma-modal ma-modal-lg" style="max-width: 850px; width: 100%; background: #fff; border-radius: 10px; overflow: auto; max-height: 92vh; position: relative;">
+      <div class="ma-modal-header" style="padding: 14px 18px; border-bottom: 1px solid #f0f0f5; display: flex; align-items: center; justify-content: space-between;">
+        <h5 id="filteredBillsModalTitle" style="margin: 0; font-size: 15px; font-weight: 600; color: #252525;"><i class="fas fa-file-invoice" style="color:#696cff;margin-right:7px;"></i>Bills List</h5>
+        <button class="ma-modal-close" onclick="closeFilteredBillsModal()" style="background: transparent; border: 0; font-size: 22px; cursor: pointer; color: #666; line-height: 1; padding: 0;">×</button>
+      </div>
+      <div class="ma-modal-body" style="padding: 18px;">
+        <div style="overflow-x:auto;">
+          <table class="ma-table" style="font-size:13px; width: 100%;">
+            <thead>
+              <tr>
+                <th>Supplier (Party)</th>
+                <th>Bill Number</th>
+                <th>Bill Date</th>
+                <th>Due Date</th>
+                <th>Amount</th>
+                <th>Days Status</th>
+              </tr>
+            </thead>
+            <tbody id="filteredBillsModalBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ma-modal-footer" style="padding: 12px 18px; border-top: 1px solid #f0f0f5; display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+        <button class="btn-ma-outline" onclick="closeFilteredBillsModal()">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- SCRIPTS -->
   <script src="js/store.js"></script>
@@ -1166,6 +1229,7 @@
   el('dsTodaySales', s.todaySales?MA.fmt(s.todaySales):'₹0');
   var wn=document.getElementById('welcomeName');
   if(wn){var u=MA.getAll('users').find(function(u){return u.username==='admin';});wn.textContent='Welcome back, '+(u&&u.name?u.name.split(' ')[0]:'Admin')+'!';}
+  
   // recent bills
   var bills=MA.getAll('bills').slice(0,5);
   var tbody=document.getElementById('recentBillsBody');
@@ -1184,6 +1248,245 @@
       return '<li style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f5f5fb;font-size:13px;"><i class="fas fa-circle" style="color:#696cff;font-size:6px;margin-top:6px;"></i><div><div>'+e.action+'</div><div style="font-size:11px;color:#aaa;">'+new Date(e.time).toLocaleString('en-IN')+'</div></div></li>';
     }).join('');
   }
+
+  // ── BILL PAYMENT DUE DATE INTEGRATION ──
+  window.getBillPaymentStatus = function(b, paymentsList) {
+    var isPaid = paymentsList.some(function(p) {
+      return p.bill === b.billNo && p.status === 'completed';
+    });
+    if (isPaid) return { status: 'Paid', class: 'badge-success', colorClass: 'success' };
+    if (!b.dueDate) return { status: 'Unpaid', class: 'badge-info', colorClass: 'info' };
+
+    var todayStr = new Date().toISOString().split('T')[0];
+    if (b.dueDate < todayStr) {
+      return { status: 'Overdue', class: 'badge-error', colorClass: 'danger' };
+    }
+    var todayMs = new Date(todayStr).getTime();
+    var dueMs = new Date(b.dueDate).getTime();
+    var diffDays = Math.ceil((dueMs - todayMs) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 7) {
+      return { status: 'Due Soon', class: 'badge-pending', colorClass: 'warning' };
+    }
+    return { status: 'Unpaid', class: 'badge-success', colorClass: 'success' };
+  };
+
+  window.openFilteredBillsModal = function(filterType) {
+    var bills = MA.getAll('bills') || [];
+    var paymentsList = MA.getAll('payments') || [];
+    var todayStr = new Date().toISOString().split('T')[0];
+    var todayMs = new Date(todayStr).getTime();
+    
+    var filtered = bills.filter(function(b) {
+      if (!b.dueDate) return false;
+      var pStatus = getBillPaymentStatus(b, paymentsList);
+      if (filterType === 'dueSoon') {
+        return pStatus.status === 'Due Soon';
+      } else if (filterType === 'overdue') {
+        return pStatus.status === 'Overdue';
+      }
+      return false;
+    });
+
+    var title = filterType === 'dueSoon' ? 'Bills Due Within 7 Days' : 'Bills Overdue & Unpaid';
+    document.getElementById('filteredBillsModalTitle').innerHTML = '<i class="fas fa-file-invoice" style="color:#696cff;margin-right:7px;"></i>' + title;
+    
+    var tbody = document.getElementById('filteredBillsModalBody');
+    if (!filtered.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#aaa;">No matching bills found</td></tr>';
+    } else {
+      tbody.innerHTML = filtered.map(function(b) {
+        var dueMs = new Date(b.dueDate).getTime();
+        var diffDays = Math.ceil((dueMs - todayMs) / (1000 * 60 * 60 * 24));
+        var daysText = '';
+        if (diffDays < 0) {
+          daysText = '<span style="color:#ff3e1d;font-weight:600;">' + Math.abs(diffDays) + ' days overdue</span>';
+        } else if (diffDays === 0) {
+          daysText = '<span style="color:#ffab00;font-weight:600;">Due today</span>';
+        } else {
+          daysText = '<span style="color:#28a745;font-weight:600;">' + diffDays + ' days remaining</span>';
+        }
+        return '<tr>' +
+          '<td>' + b.party + '</td>' +
+          '<td><code>' + b.billNo + '</code></td>' +
+          '<td>' + b.date + '</td>' +
+          '<td>' + b.dueDate + '</td>' +
+          '<td style="font-weight:600;">' + MA.fmt(b.amount) + '</td>' +
+          '<td>' + daysText + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+    document.getElementById('filteredBillsModal').style.display = 'flex';
+  };
+
+  window.closeFilteredBillsModal = function() {
+    document.getElementById('filteredBillsModal').style.display = 'none';
+  };
+
+  function checkPaymentReminders() {
+    var bills = MA.getAll('bills') || [];
+    var paymentsList = MA.getAll('payments') || [];
+    var settings = MA.getAll('settings') || {};
+    var leadDays = (settings.notifications && settings.notifications.paymentReminderDays) || 7;
+    var notifications = MA.getAll('notifications') || [];
+    var reminderSent = JSON.parse(localStorage.getItem('ma_payment_reminder_sent') || '{}');
+    
+    var todayStr = new Date().toISOString().split('T')[0];
+    var todayMs = new Date(todayStr).getTime();
+    
+    var updatedNotifs = false;
+    var dueSoonCount = 0;
+    var overdueCount = 0;
+    
+    bills.forEach(function(b) {
+      var pStatus = getBillPaymentStatus(b, paymentsList);
+      if (pStatus.status === 'Due Soon') dueSoonCount++;
+      if (pStatus.status === 'Overdue') overdueCount++;
+
+      var isPaid = paymentsList.some(function(p) {
+        return p.bill === b.billNo && p.status === 'completed';
+      });
+      if (isPaid || !b.dueDate) return;
+      
+      var dueMs = new Date(b.dueDate).getTime();
+      var diffDays = Math.ceil((dueMs - todayMs) / (1000 * 60 * 60 * 24));
+      
+      if (!reminderSent[b.billNo]) reminderSent[b.billNo] = {};
+      var sent = reminderSent[b.billNo];
+      
+      var trigger = false;
+      var title = '';
+      var desc = '';
+      
+      if (diffDays < 0) {
+        if (!sent.overdue) {
+          trigger = true;
+          sent.overdue = true;
+          title = 'Bill #' + b.billNo + ' is Overdue';
+          desc = 'Payment for Bill #' + b.billNo + ' from ' + b.party + ' of ' + MA.fmt(b.amount) + ' was due on ' + b.dueDate + ' and is now overdue.';
+        }
+      }
+      else if (diffDays === 0) {
+        if (!sent['0']) {
+          trigger = true;
+          sent['0'] = true;
+          title = 'Bill #' + b.billNo + ' is Due Today';
+          desc = 'Payment for Bill #' + b.billNo + ' from ' + b.party + ' of ' + MA.fmt(b.amount) + ' is due today.';
+        }
+      }
+      else if (diffDays <= 3) {
+        if (!sent['3']) {
+          trigger = true;
+          sent['3'] = true;
+          title = 'Bill #' + b.billNo + ' is Due in 3 Days';
+          desc = 'Payment for Bill #' + b.billNo + ' from ' + b.party + ' of ' + MA.fmt(b.amount) + ' is due on ' + b.dueDate + '.';
+        }
+      }
+      else if (diffDays <= leadDays) {
+        var leadKey = String(leadDays);
+        if (!sent[leadKey]) {
+          trigger = true;
+          sent[leadKey] = true;
+          title = 'Bill #' + b.billNo + ' is Due in ' + diffDays + ' Days';
+          desc = 'Payment for Bill #' + b.billNo + ' from ' + b.party + ' of ' + MA.fmt(b.amount) + ' is due on ' + b.dueDate + '.';
+        }
+      }
+      
+      if (trigger) {
+        notifications.unshift({
+          id: notifications.length ? Math.max(...notifications.map(function(n) { return n.id || 0; })) + 1 : 1,
+          title: title,
+          desc: desc,
+          type: 'alert',
+          unread: true,
+          time: new Date().toLocaleTimeString('en-IN') + ' ' + todayStr,
+          link: 'bills.html'
+        });
+        updatedNotifs = true;
+      }
+    });
+    
+    var lastDigestDate = localStorage.getItem('ma_last_digest_date');
+    if (lastDigestDate !== todayStr && (dueSoonCount > 0 || overdueCount > 0)) {
+      var smsLog = MA.getAll('smsSendLog') || [];
+      smsLog.unshift({
+        id: smsLog.length ? Math.max(...smsLog.map(function(l) { return l.id || 0; })) + 1 : 1,
+        type: 'email',
+        recipient: 'admin@masterassist.com',
+        subject: 'Daily Bill Payment Digest - ' + todayStr,
+        message: 'Master Assist Payment Due Alert: You have ' + dueSoonCount + ' bills due within ' + leadDays + ' days and ' + overdueCount + ' overdue bills. Please review All Bills to record payments.',
+        status: 'Sent',
+        time: new Date().toISOString()
+      });
+      MA.save('smsSendLog', smsLog);
+      localStorage.setItem('ma_last_digest_date', todayStr);
+      MA.addAudit('Daily bill digest digest email sent to Admin', 'System');
+    }
+
+    if (updatedNotifs) {
+      MA.save('notifications', notifications);
+      var nb = document.getElementById('navBadge');
+      if (nb) {
+        var unread = notifications.filter(function(n) { return n.unread; }).length;
+        nb.textContent = unread || '';
+        nb.style.display = unread ? '' : 'none';
+      }
+    }
+    localStorage.setItem('ma_payment_reminder_sent', JSON.stringify(reminderSent));
+  }
+
+  // Render Stats
+  var allBills = MA.getAll('bills') || [];
+  var allPayments = MA.getAll('payments') || [];
+  var dueSoonCount = 0;
+  var overdueCount = 0;
+
+  allBills.forEach(function(b) {
+    var pStatus = getBillPaymentStatus(b, allPayments);
+    if (pStatus.status === 'Due Soon') dueSoonCount++;
+    if (pStatus.status === 'Overdue') overdueCount++;
+  });
+
+  var elSoon = document.getElementById('dsBillsDueSoon');
+  if (elSoon) elSoon.textContent = dueSoonCount;
+  var elOverdue = document.getElementById('dsBillsOverdue');
+  if (elOverdue) elOverdue.textContent = overdueCount;
+
+  // Upcoming Payments sorting
+  var unpaidBills = allBills.filter(function(b) {
+    if (!b.dueDate) return false;
+    var pStatus = getBillPaymentStatus(b, allPayments);
+    return pStatus.status !== 'Paid';
+  });
+
+  unpaidBills.sort(function(x, y) {
+    return x.dueDate < y.dueDate ? -1 : x.dueDate > y.dueDate ? 1 : 0;
+  });
+
+  var upcomingFeed = document.getElementById('upcomingPaymentsFeed');
+  if (upcomingFeed) {
+    var nextBills = unpaidBills.slice(0, 8);
+    if (!nextBills.length) {
+      upcomingFeed.innerHTML = '<div style="font-size:12px;color:#aaa;text-align:center;padding:20px;">No upcoming payments</div>';
+    } else {
+      upcomingFeed.innerHTML = nextBills.map(function(b) {
+        var pStatus = getBillPaymentStatus(b, allPayments);
+        var badgeCls = pStatus.status === 'Overdue' ? 'badge-error' : 'badge-pending';
+        return '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid #f5f5fb;font-size:12.5px;">' +
+          '<div style="flex:1;">' +
+            '<div style="font-weight:600;color:#252525;margin-bottom:2px;">' + b.party + '</div>' +
+            '<div style="font-size:11px;color:#888;">Bill: <code>' + b.billNo + '</code> &bull; Due: ' + b.dueDate + '</div>' +
+          '</div>' +
+          '<div style="text-align:right;">' +
+            '<div style="font-weight:700;color:#252525;margin-bottom:2px;">' + MA.fmt(b.amount) + '</div>' +
+            '<span class="status-badge ' + badgeCls + '" style="font-size:9px;padding:2px 6px;text-transform:capitalize;">' + pStatus.status + '</span>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Trigger reminders checking
+  checkPaymentReminders();
 })();
 
 
