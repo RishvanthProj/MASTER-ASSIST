@@ -95,8 +95,10 @@ const MA = (function () {
     }
   }
 
+  const backendKeys = ['items', 'sales', 'brands', 'categories', 'sizes', 'colours', 'hsns', 'units', 'itemNames'];
+
   function getAll(key) { 
-    if (key === 'items' || key === 'sales') {
+    if (backendKeys.includes(key)) {
         return syncRequest('GET', '/' + key, null);
     }
     return load(key, []); 
@@ -105,9 +107,7 @@ const MA = (function () {
   function getOne(key, id) { return getAll(key).find(r => r.id === id) || null; }
   
   function set(key, val) { 
-    // We strictly should not use MA.set for items or sales as it overwrites the whole array!
-    // But if something still does, we just return the value or throw an error.
-    if (key === 'items' || key === 'sales') {
+    if (backendKeys.includes(key)) {
         console.warn('Direct MA.set called on ' + key + '. This bypasses DB sync. Use upsert/remove.');
         return val;
     }
@@ -115,7 +115,7 @@ const MA = (function () {
   }
 
   function upsert(key, record) {
-    if (key === 'items' || key === 'sales') {
+    if (backendKeys.includes(key)) {
         if (record.id) {
             return syncRequest('PUT', '/' + key + '/' + record.id, record);
         } else {
@@ -129,7 +129,7 @@ const MA = (function () {
   }
   
   function remove(key, id) { 
-    if (key === 'items' || key === 'sales') {
+    if (backendKeys.includes(key)) {
         return syncRequest('DELETE', '/' + key + '/' + id, null);
     }
     save(key, getAll(key).filter(r => r.id !== id)); 

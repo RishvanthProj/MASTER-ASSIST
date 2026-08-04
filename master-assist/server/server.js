@@ -63,15 +63,55 @@ const salesColumns = [
     { header: 'Items JSON', key: 'items', width: 50 }
 ];
 
+const metadataKeys = ['brands', 'categories', 'sizes', 'colours', 'hsns', 'units', 'itemNames'];
+const metadataColumns = [
+    { header: 'ID', key: 'id', width: 10 },
+    { header: 'Name', key: 'name', width: 30 }
+];
+
 // Helper to initialize or load workbook
 async function getWorkbook() {
     const wb = new ExcelJS.Workbook();
+    let isModified = false;
     if (fs.existsSync(DB_FILE)) {
         try {
             await wb.xlsx.readFile(DB_FILE);
             // Re-attach column keys because exceljs drops them on read
             if (wb.getWorksheet('Items')) wb.getWorksheet('Items').columns = itemsColumns;
             if (wb.getWorksheet('Sales')) wb.getWorksheet('Sales').columns = salesColumns;
+            
+            // Check if metadata sheets exist, create them if missing
+            metadataKeys.forEach(k => {
+                let ws = wb.getWorksheet(k);
+                if (!ws) {
+                    ws = wb.addWorksheet(k);
+                    // Add default rows to seeded lists
+                    if (k === 'brands') {
+                        ws.addRow({ id: 1, name: 'Local' });
+                        ws.addRow({ id: 2, name: 'Samsung' });
+                    } else if (k === 'categories') {
+                        ws.addRow({ id: 1, name: 'Grocery' });
+                        ws.addRow({ id: 2, name: 'Electronics' });
+                    } else if (k === 'units') {
+                        ws.addRow({ id: 1, name: 'Pcs' });
+                        ws.addRow({ id: 2, name: 'Kgs' });
+                    } else if (k === 'sizes') {
+                        ws.addRow({ id: 1, name: 'Free Size' });
+                    } else if (k === 'colours') {
+                        ws.addRow({ id: 1, name: 'Common' });
+                    } else if (k === 'hsns') {
+                        ws.addRow({ id: 1, name: '9983' });
+                    } else if (k === 'itemNames') {
+                        ws.addRow({ id: 1, name: 'Atta 5kg' });
+                        ws.addRow({ id: 2, name: 'WHITE SHOE' });
+                    }
+                    isModified = true;
+                }
+                ws.columns = metadataColumns;
+            });
+            if (isModified) {
+                await saveWorkbook(wb);
+            }
         } catch (err) {
             if (err.code === 'EBUSY' || (err.message && err.message.includes('EBUSY'))) {
                 throw new Error('FILE_LOCKED');
@@ -85,6 +125,30 @@ async function getWorkbook() {
 
         const salesSheet = wb.addWorksheet('Sales');
         salesSheet.columns = salesColumns;
+        
+        metadataKeys.forEach(k => {
+            const ws = wb.addWorksheet(k);
+            ws.columns = metadataColumns;
+            if (k === 'brands') {
+                ws.addRow({ id: 1, name: 'Local' });
+                ws.addRow({ id: 2, name: 'Samsung' });
+            } else if (k === 'categories') {
+                ws.addRow({ id: 1, name: 'Grocery' });
+                ws.addRow({ id: 2, name: 'Electronics' });
+            } else if (k === 'units') {
+                ws.addRow({ id: 1, name: 'Pcs' });
+                ws.addRow({ id: 2, name: 'Kgs' });
+            } else if (k === 'sizes') {
+                ws.addRow({ id: 1, name: 'Free Size' });
+            } else if (k === 'colours') {
+                ws.addRow({ id: 1, name: 'Common' });
+            } else if (k === 'hsns') {
+                ws.addRow({ id: 1, name: '9983' });
+            } else if (k === 'itemNames') {
+                ws.addRow({ id: 1, name: 'Atta 5kg' });
+                ws.addRow({ id: 2, name: 'WHITE SHOE' });
+            }
+        });
         
         await saveWorkbook(wb);
     }
@@ -247,6 +311,68 @@ app.delete('/api/items/:id', (req, res) => {
             res.json({ success: true });
         } catch (e) {
             res.status(e.message === 'FILE_LOCKED' ? 409 : 500).json({ error: e.message === 'FILE_LOCKED' ? 'Database is currently open in Excel. Please close it and try again.' : e.message });
+        }
+    });
+});
+
+// GET /api/:type (brands, categories, sizes, colours, hsns, units)
+app.get('/api/:type', (req, res, next) => {
+    const type = req.params.type;
+    if (!metadataKeys.includes(type)) return next();
+    
+    withLock(async () => {
+        try {
+            const wb = await getWorkbook();
+            const sheet = wb.getWorksheet(type);
+            const list = [];
+            sheet.eachRow((row, rowNumber) => {
+                if (rowNumber === 1) return; // skip header
+                list.push({
+                    id: Number(row.getCell('id').value),
+                    name: row.getCell('name').value
+                });
+            });
+            res.json(list);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
+        }
+    });
+});
+
+// POST /api/:type (create metadata option)
+app.post('/api/:type', (req, res, next) => {
+    const type = req.params.type;
+    if (!metadataKeys.includes(type)) return next();
+    
+    withLock(async () => {
+        try {
+            const wb = await getWorkbook();
+            const sheet = wb.getWorksheet(type);
+            const data = req.body;
+            
+            // Check duplicate name
+            let isDuplicate = false;
+            let maxId = 0;
+            sheet.eachRow((row, rowNum) => {
+                if (rowNum === 1) return;
+                const name = row.getCell('name').value || '';
+                if (name.toString().toLowerCase() === (data.name || '').toString().toLowerCase()) {
+                    isDuplicate = true;
+                }
+                const id = Number(row.getCell('id').value) || 0;
+                if (id > maxId) maxId = id;
+            });
+            
+            if (isDuplicate) {
+                return res.status(400).json({ error: 'Value already exists' });
+            }
+            
+            data.id = maxId + 1;
+            sheet.addRow(data);
+            await saveWorkbook(wb);
+            res.json(data);
+        } catch (e) {
+            res.status(500).json({ error: e.message });
         }
     });
 });

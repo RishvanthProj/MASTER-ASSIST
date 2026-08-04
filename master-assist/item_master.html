@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="css/master-assist.css" />
 </head>
 <body>
@@ -122,43 +123,153 @@
 
 <!-- Add/Edit Modal -->
 <div class="modal fade" id="itemModal" tabindex="-1">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title" id="modalTitle">Add Item</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">
-        <input type="hidden" id="editId" />
-        <div class="row g-3">
-          <div class="col-md-4"><label class="form-label">Item Name <span style="color:red">*</span></label><input type="text" class="ma-input w-100" id="iName" /></div>
-          <div class="col-md-2"><label class="form-label">SKU <span style="color:red">*</span></label><input type="text" class="ma-input w-100" id="iSKU" maxlength="20" /></div>
-          <div class="col-md-2"><label class="form-label">Barcode</label><input type="text" class="ma-input w-100" id="iBarcode" /></div>
-          <div class="col-md-2"><label class="form-label">HSN Code</label><input type="text" class="ma-input w-100" id="iHSN" /></div>
-          <div class="col-md-2"><label class="form-label">Unit</label>
-            <select class="ma-select w-100" id="iUnit"><option>Pcs</option><option>Kgs</option><option>Ltrs</option><option>Bags</option><option>Box</option><option>Btls</option></select>
-          </div>
-          <div class="col-md-3"><label class="form-label">Category</label>
-            <select class="ma-select w-100" id="iCat"><option>Grocery</option><option>Electronics</option><option>Clothing</option><option>FMCG</option><option>Pharma</option></select>
-          </div>
-          <div class="col-md-3"><label class="form-label">Brand</label>
-            <select class="ma-select w-100" id="iBrand"><option>Local</option><option>Samsung</option><option>Xiaomi</option><option>Unilever</option><option>P&amp;G</option></select>
-          </div>
-          <div class="col-md-2"><label class="form-label">GST %</label>
-            <input type="number" class="ma-input w-100" id="iGST" step="0.01" placeholder="e.g. 18" />
-          </div>
-          <div class="col-md-2"><label class="form-label">Tax Type</label>
-            <select class="ma-select w-100" id="iTaxType"><option>Inclusive</option><option>Exclusive</option></select>
-          </div>
-          <div class="col-md-2"><label class="form-label">Status</label>
-            <select class="ma-select w-100" id="iStatus"><option value="active">Active</option><option value="inactive">Inactive</option></select>
-          </div>
-          <div class="col-md-2"><label class="form-label">Purchase Price (₹)</label><input type="number" class="ma-input w-100" id="iPurchase" step="0.01" /></div>
-          <div class="col-md-2"><label class="form-label">Sale Price (₹)</label><input type="number" class="ma-input w-100" id="iSale" step="0.01" /></div>
-          <div class="col-md-2"><label class="form-label">MRP (₹)</label><input type="number" class="ma-input w-100" id="iMRP" step="0.01" /></div>
-          <div class="col-md-3"><label class="form-label">Min Stock Level</label><input type="number" class="ma-input w-100" id="iMinStock" /></div>
-          <div class="col-md-3"><label class="form-label">Opening/Available Stock <span style="color:red">*</span></label><input type="number" class="ma-input w-100" id="iStock" value="0" /></div>
-          <div class="col-12"><label class="form-label">Description</label><textarea class="ma-textarea w-100" id="iDesc" rows="2"></textarea></div>
-        </div>
+  <div class="modal-dialog" style="max-width: 1200px; width: 95%;">
+    <div class="modal-content" style="border-radius: 12px; overflow: hidden; border: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background: #696cff; color: #fff; padding: 16px 24px;">
+        <h5 class="modal-title" id="modalTitle" style="font-weight:600; margin:0;"><i class="fas fa-cube me-2"></i>Add Item</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="background-color: #fff; opacity: 0.8; border-radius: 50%; padding: 6px; font-size: 10px;"></button>
       </div>
-      <div class="modal-footer">
+      <div class="modal-body" style="padding: 24px; background: #f8f9fc;">
+        <input type="hidden" id="editId" />
+        
+        <div class="row g-4">
+          <!-- Left Panel: Basic Information (7/12) -->
+          <div class="col-lg-7">
+            <div class="card" style="border: 1px solid #e3e6f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); background: #fff; height: 100%;">
+              <div class="card-header" style="background: #f8f9fc; border-bottom: 1px solid #e3e6f0; padding: 12px 18px;">
+                <h6 style="margin: 0; font-weight: 700; color: #4e73df;"><i class="fas fa-info-circle me-1"></i>Basic Information</h6>
+              </div>
+              <div class="card-body" style="padding: 20px;">
+                <div class="row g-3">
+                  <!-- Two-column field layout inside basic info panel -->
+                  <div class="col-md-6">
+                    <!-- Left column -->
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Item Name <span style="color:red">*</span></label>
+                      <select class="ma-select w-100" id="iNameSelect" style="width: 100%;"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Barcode</label>
+                      <input type="text" class="ma-input w-100" id="iBarcode" placeholder="Enter barcode" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Brand</label>
+                      <select class="ma-select w-100" id="iBrandSelect" style="width: 100%;"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Size</label>
+                      <select class="ma-select w-100" id="iSizeSelect" style="width: 100%;"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Colour</label>
+                      <select class="ma-select w-100" id="iColourSelect" style="width: 100%;"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Item Code / SKU <span style="color:red">*</span></label>
+                      <input type="text" class="ma-input w-100" id="iSKU" maxlength="20" placeholder="e.g. SKU-001" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Unit-1</label>
+                      <select class="ma-select w-100" id="iUnitSelect" style="width: 100%;"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">HSN/SAC</label>
+                      <select class="ma-select w-100" id="iHSNSelect" style="width: 100%;"></select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Tax Category (GST%)</label>
+                      <input type="number" class="ma-input w-100" id="iGST" step="0.01" placeholder="e.g. 18" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Tax Based On (Type)</label>
+                      <select class="ma-select w-100" id="iTaxType">
+                        <option>Inclusive</option>
+                        <option>Exclusive</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <!-- Right column -->
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Item Type</label>
+                      <select class="ma-select w-100" id="iItemType">
+                        <option>Goods</option>
+                        <option>Services</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Purchase Rate (₹)</label>
+                      <input type="number" class="ma-input w-100" id="iPurchase" step="0.01" placeholder="0.00" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">MRP (₹)</label>
+                      <input type="number" class="ma-input w-100" id="iMRP" step="0.01" placeholder="0.00" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Rate / Sale Price (₹) <span style="color:red">*</span></label>
+                      <input type="number" class="ma-input w-100" id="iSale" step="0.01" placeholder="0.00" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Panel: Advance Information (5/12) -->
+          <div class="col-lg-5">
+            <div class="card" style="border: 1px solid #e3e6f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); background: #fff; height: 100%;">
+              <div class="card-header" style="background: #f8f9fc; border-bottom: 1px solid #e3e6f0; padding: 0;">
+                <!-- Tab Headers -->
+                <ul class="nav nav-tabs card-header-tabs" id="advTabs" role="tablist" style="margin: 0; border: 0; padding-left: 10px;">
+                  <li class="nav-item">
+                    <button class="nav-link active" id="stock-tab" data-bs-toggle="tab" data-bs-target="#tab-stock" type="button" role="tab" style="border: 0; border-bottom: 3px solid #696cff; font-weight:600; padding: 14px 16px; color: #696cff; background: transparent;">Current Stock</button>
+                  </li>
+                  <li class="nav-item">
+                    <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#tab-info" type="button" role="tab" style="border: 0; border-bottom: 3px solid transparent; font-weight:600; padding: 14px 16px; color: #666; background: transparent;">Other Info</button>
+                  </li>
+                </ul>
+              </div>
+              <div class="card-body" style="padding: 20px;">
+                <div class="tab-content" id="advTabsContent">
+                  <!-- Tab 1: Current Stock -->
+                  <div class="tab-pane fade show active" id="tab-stock" role="tabpanel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 18px;">
+                      <span style="font-size:13px; color:#555; font-weight:500;">Manage product counts</span>
+                      <button type="button" class="btn btn-sm btn-outline-primary" style="font-size:12px; font-weight:600; border-radius:4px; padding: 4px 10px;" onclick="refreshStockInput()"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Current / Opening Stock <span style="color:red">*</span></label>
+                      <input type="number" class="ma-input w-100" id="iStock" value="0" style="font-size: 18px; font-weight: 700; height: 44px; text-align: center; color: #696cff;" />
+                    </div>
+                  </div>
+                  
+                  <!-- Tab 2: Other Info -->
+                  <div class="tab-pane fade" id="tab-info" role="tabpanel">
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Min Stock Level</label>
+                      <input type="number" class="ma-input w-100" id="iMinStock" placeholder="e.g. 5" />
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Status</label>
+                      <select class="ma-select w-100" id="iStatus">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                    <div class="mb-3">
+                      <label class="ma-label" style="font-size:12.5px; font-weight:600; margin-bottom:5px; display:block;">Description</label>
+                      <textarea class="ma-textarea w-100" id="iDesc" rows="4" placeholder="Enter product descriptions/notes..."></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <div class="modal-footer" style="background: #f8f9fc; border-top: 1px solid #e3e6f0; padding: 16px 24px; display: flex; justify-content: flex-end; gap: 8px;">
         <button class="btn-ma-outline" data-bs-dismiss="modal">Cancel</button>
         <button class="btn-ma-primary" onclick="saveItem()">Save Item</button>
       </div>
@@ -167,10 +278,124 @@
 </div>
 
 <script src="js/store.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
 <script>
 const Swal2=Swal.mixin({confirmButtonColor:'#696cff'});
+
+/* ---- Select2 Metadata Init Helpers ---- */
+function initSelect2WithCreate(selectId, metadataType, placeholderText) {
+  var $select = $('#' + selectId);
+  
+  // Fetch current options from backend
+  var list = MA.getAll(metadataType) || [];
+  
+  // Populate select options
+  var html = '<option value="">' + placeholderText + '</option>';
+  list.forEach(function(item) {
+      html += '<option value="' + item.name + '">' + item.name + '</option>';
+  });
+  $select.html(html);
+  
+  $select.select2({
+      placeholder: placeholderText,
+      allowClear: true,
+      dropdownParent: $('#itemModal'),
+      language: {
+          noResults: function() {
+              return '<button class="btn-ma-primary btn-ma-sm w-100" style="font-size:11px; margin-top:5px; background:#696cff; color:#fff; border:0; padding:6px; border-radius:4px; cursor:pointer;" onclick="triggerCreateMetadata(\'' + metadataType + '\', \'' + selectId + '\')"><i class="fas fa-plus"></i> Create New [ CTRL+M ]</button>';
+          }
+      },
+      escapeMarkup: function(markup) {
+          return markup;
+      }
+  });
+
+  // Also inject a footer at the bottom of the results dropdown when it opens
+  $select.on('select2:open', function() {
+      setTimeout(function() {
+          var $results = $('.select2-results');
+          if ($results.find('.select2-create-new-btn').length === 0) {
+              var btnHtml = '<div class="select2-create-new-btn" style="padding: 6px 12px; border-top: 1px solid #e8e8f0; background: #fcfcff; text-align: center;">' +
+                  '<button class="btn btn-primary btn-sm w-100" style="font-size: 12px; background: #696cff; color:#fff; border:0; border-radius:4px; padding: 4px 8px; cursor:pointer;" onclick="triggerCreateMetadata(\'' + metadataType + '\', \'' + selectId + '\')">' +
+                  '<i class="fas fa-plus"></i> Create New [ CTRL+M ]' +
+                  '</button>' +
+              '</div>';
+              $results.append(btnHtml);
+          }
+      }, 50);
+  });
+}
+
+function triggerCreateMetadata(type, selectId) {
+  // Close the open Select2 dropdown
+  $('#' + selectId).select2('close');
+  
+  Swal2.fire({
+      title: 'Create New ' + type.charAt(0).toUpperCase() + type.slice(1).replace(/s$/, ''),
+      input: 'text',
+      inputPlaceholder: 'Enter name/value',
+      showCancelButton: true,
+      confirmButtonText: 'Create',
+      preConfirm: function(val) {
+          if (!val || !val.trim()) {
+              Swal2.showValidationMessage('Value is required');
+          }
+          return val.trim();
+      }
+  }).then(function(result) {
+      if (result.isConfirmed) {
+          var name = result.value;
+          try {
+              // Save to backend Excel sheet
+              MA.upsert(type, { name: name });
+              
+              // Reload list and re-populate select
+              var list = MA.getAll(type) || [];
+              var html = '<option value="">Select Option</option>';
+              list.forEach(function(item) {
+                  html += '<option value="' + item.name + '">' + item.name + '</option>';
+              });
+              $('#' + selectId).html(html);
+              
+              // Select the newly created value
+              $('#' + selectId).val(name).trigger('change');
+              
+              Swal2.fire('Created!', name + ' has been saved.', 'success');
+          } catch (err) {
+              Swal2.fire('Error', err.message || 'Could not save option.', 'error');
+          }
+      }
+  });
+}
+
+// Stock refresh simulation helper
+window.refreshStockInput = function() {
+    // Simulate reload stock from system API
+    Swal2.fire({
+        title: 'Refreshing Stock counts...',
+        timer: 800,
+        timerProgressBar: true,
+        didOpen: () => {
+            Swal2.showLoading();
+        }
+    }).then(() => {
+        document.getElementById('iStock').value = Math.floor(Math.random() * 80) + 10;
+        Swal2.fire('Refreshed!', 'Stock loaded successfully.', 'success');
+    });
+};
+
+$(document).ready(function() {
+    initSelect2WithCreate('iNameSelect', 'itemNames', 'Select Item Name');
+    initSelect2WithCreate('iBrandSelect', 'brands', 'Select Brand');
+    initSelect2WithCreate('iSizeSelect', 'sizes', 'Select Size');
+    initSelect2WithCreate('iColourSelect', 'colours', 'Select Colour');
+    initSelect2WithCreate('iUnitSelect', 'units', 'Select Unit');
+    initSelect2WithCreate('iHSNSelect', 'hsns', 'Select HSN/SAC');
+});
+
 let items = MA.getAll('items');
 let nextId = MA.nextId(items), currentPage=1,rowsPerPage=12,filtered=[];
 function fmtAmt(n){return '₹'+Number(n).toLocaleString('en-IN');}
@@ -234,31 +459,56 @@ function renderTable(){
 }
 
 function openAdd(){
-  document.getElementById('modalTitle').textContent='Add Item';document.getElementById('editId').value='';
-  ['iName','iSKU','iBarcode','iHSN','iDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modalTitle').textContent='Add Item';
+  document.getElementById('editId').value='';
+  
+  // Clear standard inputs
+  ['iSKU','iBarcode','iDesc'].forEach(id=>document.getElementById(id).value='');
   ['iPurchase','iSale','iMRP','iMinStock','iStock'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('iStock').value='0';
-  document.getElementById('iUnit').value='Pcs';document.getElementById('iCat').value='Grocery';
-  document.getElementById('iBrand').value='Local';document.getElementById('iGST').value='';
   document.getElementById('iStatus').value='active';
+  
+  // Reset Select2 fields
+  $('#iNameSelect').val('').trigger('change');
+  $('#iBrandSelect').val('').trigger('change');
+  $('#iSizeSelect').val('').trigger('change');
+  $('#iColourSelect').val('').trigger('change');
+  $('#iUnitSelect').val('').trigger('change');
+  $('#iHSNSelect').val('').trigger('change');
+  
   new bootstrap.Modal(document.getElementById('itemModal')).show();
 }
+
 function editItem(id){
   const it=items.find(x=>x.id===id);if(!it) return;
-  document.getElementById('modalTitle').textContent='Edit Item';document.getElementById('editId').value=id;
-  document.getElementById('iName').value=it.name;document.getElementById('iSKU').value=it.sku;
-  document.getElementById('iBarcode').value=it.barcode||'';document.getElementById('iHSN').value=it.hsn||'';
-  document.getElementById('iUnit').value=it.unit;document.getElementById('iCat').value=it.cat;
-  document.getElementById('iBrand').value=it.brand;document.getElementById('iGST').value=it.gst;
-  document.getElementById('iTaxType').value=it.taxType;document.getElementById('iStatus').value=it.status;
-  document.getElementById('iPurchase').value=it.purchase;document.getElementById('iSale').value=it.sale;
-  document.getElementById('iMRP').value=it.mrp;document.getElementById('iMinStock').value=it.minStock;
+  document.getElementById('modalTitle').textContent='Edit Item';
+  document.getElementById('editId').value=id;
+  
+  // Standard inputs
+  document.getElementById('iSKU').value=it.sku;
+  document.getElementById('iBarcode').value=it.barcode||'';
+  document.getElementById('iStatus').value=it.status || 'active';
+  document.getElementById('iPurchase').value=it.purchase;
+  document.getElementById('iSale').value=it.sale;
+  document.getElementById('iMRP').value=it.mrp;
+  document.getElementById('iMinStock').value=it.minStock;
   document.getElementById('iStock').value=it.stock||0;
   document.getElementById('iDesc').value=it.desc||'';
+  
+  // Select2 inputs
+  $('#iNameSelect').val(it.name || '').trigger('change');
+  $('#iBrandSelect').val(it.brand || '').trigger('change');
+  $('#iSizeSelect').val(it.size || '').trigger('change');
+  $('#iColourSelect').val(it.colour || '').trigger('change');
+  $('#iUnitSelect').val(it.unit || '').trigger('change');
+  $('#iHSNSelect').val(it.hsn || '').trigger('change');
+  
   new bootstrap.Modal(document.getElementById('itemModal')).show();
 }
+
 function saveItem(){
-  const name=document.getElementById('iName').value.trim();const sku=document.getElementById('iSKU').value.trim();
+  const name = $('#iNameSelect').val() ? $('#iNameSelect').val().trim() : '';
+  const sku = document.getElementById('iSKU').value.trim();
   if(!name||!sku){alert('Name and SKU are required.');return;}
   const eid=document.getElementById('editId').value;
   if(items.some(i => i.sku.toLowerCase() === sku.toLowerCase() && i.id !== parseInt(eid))) {
@@ -273,20 +523,24 @@ function saveItem(){
   }
   
   const data={
-      name,sku,barcode:barcodeValue,
-      hsn:document.getElementById('iHSN').value.trim(),
-      unit:document.getElementById('iUnit').value,
-      cat:document.getElementById('iCat').value,
-      brand:document.getElementById('iBrand').value,
-      gst:document.getElementById('iGST').value,
-      taxType:document.getElementById('iTaxType').value,
-      status:document.getElementById('iStatus').value,
-      purchase:parseFloat(document.getElementById('iPurchase').value)||0,
-      sale:parseFloat(document.getElementById('iSale').value)||0,
-      mrp:parseFloat(document.getElementById('iMRP').value)||0,
-      minStock:parseInt(document.getElementById('iMinStock').value)||0,
-      stock:parseInt(document.getElementById('iStock').value)||0,
-      desc:document.getElementById('iDesc').value.trim()
+      name,
+      sku,
+      barcode:barcodeValue,
+      hsn: $('#iHSNSelect').val() || '',
+      unit: $('#iUnitSelect').val() || '',
+      brand: $('#iBrandSelect').val() || '',
+      size: $('#iSizeSelect').val() || '',
+      colour: $('#iColourSelect').val() || '',
+      cat: 'General', // Default categorization matching master lists
+      gst: document.getElementById('iGST').value,
+      taxType: document.getElementById('iTaxType').value,
+      status: document.getElementById('iStatus').value,
+      purchase: parseFloat(document.getElementById('iPurchase').value)||0,
+      sale: parseFloat(document.getElementById('iSale').value)||0,
+      mrp: parseFloat(document.getElementById('iMRP').value)||0,
+      minStock: parseInt(document.getElementById('iMinStock').value)||0,
+      stock: parseInt(document.getElementById('iStock').value)||0,
+      desc: document.getElementById('iDesc').value.trim()
   };
   
   if (data.purchase < 0 || data.sale < 0 || data.mrp < 0 || data.minStock < 0 || data.stock < 0) {
