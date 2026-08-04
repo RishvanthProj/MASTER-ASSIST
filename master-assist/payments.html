@@ -358,7 +358,23 @@ function viewPayment(id){
 function deletePayment(id){
   const p=payments.find(x=>x.id===id);
   Swal2.fire({title:`Delete ${p.no}?`,icon:'warning',showCancelButton:true,confirmButtonText:'Delete',confirmButtonColor:'#dc3545'}).then(r=>{
-    if(r.isConfirmed){payments=payments.filter(x=>x.id!==id);MA.set('payments',payments);applyFilters();Swal2.fire('Deleted!','','success');}
+    if(r.isConfirmed){
+      payments=payments.filter(x=>x.id!==id);
+      MA.set('payments',payments);
+      
+      // Clean up cached paymentStatus on deleted bill references
+      if (p.bill) {
+        var bills = MA.getAll('bills') || [];
+        var matchedBill = bills.find(function(b) { return b.billNo === p.bill; });
+        if (matchedBill) {
+          delete matchedBill.paymentStatus;
+          MA.set('bills', bills);
+        }
+      }
+
+      applyFilters();
+      Swal2.fire('Deleted!','','success');
+    }
   });
 }
 
